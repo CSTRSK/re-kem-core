@@ -26,7 +26,7 @@ def derive_seed(label: str) -> bytes:
 
 def main():
     kem = PostQuantumRingLWEKEM()  # n=512, q=12289, eta=8
-    rounds = 1000
+    rounds = int(sys.argv[1]) if len(sys.argv) > 1 else 1000
     out = []
     t0 = time.time()
 

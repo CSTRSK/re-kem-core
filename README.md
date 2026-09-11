@@ -120,14 +120,14 @@ python3 tools/cross_kem_python.py > /tmp/py-vectors.json
 python3 tools/compare_vectors.py
 ```
 
-**Result over 1000 full KEM rounds:**
+**Result over 10 000 full KEM rounds:**
 
 | Checked | Mismatches |
 |---------|-----------|
 | SHA-256 of public key | **0** |
 | SHA-256 of ciphertext | **0** |
 | Shared secret | **0** |
-| **Total (3000 checks)** | **0** |
+| **Total (30 000 checks)** | **0** |
 
 Both sides derive seeds identically (`sha256("re-kem-cross-<i>-<label>")`), so
 this covers the entire pipeline: rejection sampling, CBD noise, NTT
@@ -138,9 +138,27 @@ multiplication, message encoding, FO transform and serialisation.
 | Implementation | Per full round (keygen + encaps + decaps) |
 |----------------|-------------------------------------------|
 | Python reference | 12.2 ms |
-| **This Rust crate** | **0.2 ms** |
+| **This Rust crate** | **0.188 ms** |
 
-≈ **60× faster**, with the constant-time structure the Python version cannot offer.
+≈ **65× faster**, with the constant-time structure the Python version cannot offer.
+
+### 1 000 000-round stress test
+
+```bash
+ROUNDS=1000000 EMIT=0 cargo run --release --example stress_1m
+```
+
+```
+Runden:        1.000.000
+Fehler:        0
+Dauer:         187.7s
+Durchsatz:     5327 Runden/s
+Pro Runde:     0.188 ms (keygen + encaps + decaps)
+✅ ALLE 1000000 RUNDEN KORREKT
+```
+
+Every one of the million rounds performs a complete keygen → encaps → decaps
+cycle and asserts that the shared secrets match.
 
 ## Build & test
 
@@ -169,7 +187,8 @@ test result: ok. 17 passed; 0 failed
 - [x] Rejection sampling for a(x)
 - [x] Polynomial packing / serialisation
 - [x] `keygen` / `encaps` / `decaps` (Fujisaki–Okamoto)
-- [x] Bit-identical cross-validation against the Python reference (1000 rounds)
+- [x] Bit-identical cross-validation against the Python reference (10 000 rounds)
+- [x] 1 000 000-round stress test (0 failures)
 - [ ] Timing validation with `dudect`
 - [ ] Zeroization of secret intermediates on drop
 
