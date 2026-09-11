@@ -39,6 +39,12 @@ Operations (all branchless):
 - `mul` — Montgomery multiplication (REDC)
 - `add` / `sub` — conditional-subtraction reduction, no data-dependent branches
 
+### `no_std`
+
+The crate is `#![no_std]` (only `core` + the `subtle` crate) — it can therefore be
+compiled for embedded and bare-metal targets where no Rust standard library exists.
+`cargo test` links `std` so the test suite can use `Vec`.
+
 ## 🐛 The R-constant bug this crate caught
 
 A reviewed draft of the Rust port stated:
