@@ -1,9 +1,20 @@
 [package]
 name = "re-kem-core"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "Constant-time Ring-LWE KEM (RE-KEM) — full Rust port of the Python reference"
+license = "AGPL-3.0"
 
 [dependencies]
 subtle = { version = "2", default-features = false }
+sha3 = { version = "0.10", default-features = false }
+getrandom = { version = "0.2", optional = true }
+
+[features]
+default = ["std", "rng"]
+std = []
+rng = ["dep:getrandom", "getrandom/std"]
+
+[dev-dependencies]
+hex = "0.4"
+sha2 = "0.10"

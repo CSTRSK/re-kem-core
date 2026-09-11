@@ -56,6 +56,16 @@ fn montgomery_mul_raw(a: u16, b: u16) -> u16 {
 }
 
 impl FieldElement {
+    /// The additive identity (0 in Montgomery form is 0).
+    pub const fn zero() -> Self {
+        FieldElement(0)
+    }
+
+    /// The multiplicative identity (1 in Montgomery form is R mod q = 4091).
+    pub const fn one() -> Self {
+        FieldElement(4091) // R mod q
+    }
+
     /// Lift a plain residue in [0, q) into Montgomery form.
     pub fn from_plain(a: u16) -> Self {
         debug_assert!((a as u32) < Q);

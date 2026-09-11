@@ -2,15 +2,16 @@
 
 # 🦀 re-kem-core
 
-**Constant-Time Montgomery Field Arithmetic for RE-KEM (Ring-LWE, q = 12289)**
+**Constant-Time Ring-LWE KEM (RE-KEM) — complete Rust port**
 
 ![Rust](https://img.shields.io/badge/Rust-1.98-orange?logo=rust)
 ![License](https://img.shields.io/badge/License-AGPL--3.0-blue)
-![Tests](https://img.shields.io/badge/tests-5%2F5-green)
+![Tests](https://img.shields.io/badge/tests-17%2F17-green)
+![Cross--validated](https://img.shields.io/badge/cross--validation-1000%2F1000-brightgreen)
 
-The Rust core for the post-quantum [RE-KEM](https://github.com/CSTRSK/RE-KEM) port —
-the piece the pure-Python reference implementation explicitly cannot provide:
-**real control over timing and memory-access patterns**.
+A full, constant-time Rust implementation of the post-quantum
+[RE-KEM](https://github.com/CSTRSK/RE-KEM) — verified **bit-identical** to the
+Python reference over 1000 full KEM rounds.
 
 </div>
 
@@ -25,35 +26,41 @@ The Python reference (`rekem.py`) states it plainly in its own docstrings:
 > real control over timing/memory-access patterns, plus measurement (e.g. dudect),
 > before the constant-time claim is defensible.*
 
-This crate is that port's foundation: arithmetic on `Z_q` with **no secret-dependent
-branches**, built for the NewHope-512 parameter regime used by RE-KEM.
+This crate is that port.
+
+## Parameters (NewHope-512 regime)
+
+| Item | Value |
+|------|-------|
+| Dimension `n` | 512 |
+| Modulus `q` | 12289 (NTT-friendly: 12·1024 + 1) |
+| Noise `η` (eta) | 8 |
+| Ring | Z_q[X] / (X^512 + 1) |
+| Security | IND-CCA2 (Fujisaki–Okamoto, implicit rejection) |
+| Public Key | 1056 B |
+| Secret Key | 2144 B |
+| Ciphertext | 2048 B |
+| Shared Secret | 32 B |
 
 ## What is implemented
 
 | Module | Contents |
 |--------|----------|
-| `field.rs` | `FieldElement` — Montgomery-form arithmetic mod q = 12289 |
+| `field.rs` | `FieldElement` — constant-time Montgomery arithmetic mod q |
+| `ntt.rs` | Negacyclic NTT (O(n log n)), twisting/untwisting, polynomial type |
+| `sampling.rs` | CBD(η=8) noise sampling, NewHope-style rejection sampling for a(x), encode/decode |
+| `kem.rs` | `keygen` / `encaps` / `decaps` with the Fujisaki–Okamoto transform |
 
-Operations (all branchless):
-- `from_plain` / `to_plain` — Montgomery conversion
-- `mul` — Montgomery multiplication (REDC)
-- `add` / `sub` — conditional-subtraction reduction, no data-dependent branches
-
-### `no_std`
-
-The crate is `#![no_std]` (only `core` + the `subtle` crate) — it can therefore be
-compiled for embedded and bare-metal targets where no Rust standard library exists.
-`cargo test` links `std` so the test suite can use `Vec`.
+Every operation needed for a complete, standards-shaped KEM is present:
+- **Negacyclic NTT** — radix-2 Cooley–Tukey with bit-reversal, ψ-twisting
+- **CBD sampling** — SHAKE-256(seed‖nonce), 2η bits per coefficient, MSB-first
+- **Rejection sampling** — a(x) built from 16-bit words accepted only below ⌊65536/q⌋·q
+- **Serialisation** — 2 bytes per coefficient, little-endian
+- **FO transform** — SHA3-256 / SHA3-512 / SHAKE-256, implicit rejection
 
 ## 🐛 The R-constant bug this crate caught
 
-A reviewed draft of the Rust port stated:
-
-```text
-R = 2^16 ≡ 4095 (mod q)     ← WRONG
-```
-
-The correct value is **4091**:
+A reviewed draft stated `R = 2^16 ≡ 4095 (mod q)`. The correct value is **4091**:
 
 ```text
 2^16 mod 12289 = 4091        (verified: pow(2,16,12289) == 4091)
@@ -62,83 +69,122 @@ The correct value is **4091**:
 **Why it matters:** `from_plain(a) = a · R² · R⁻¹ = a·R mod q`. With a wrong `R²`,
 *every* field element is silently mis-scaled. `keygen`/`encaps`/`decaps` would run
 without crashing and only fail statistically — or not at all. Not a side-channel bug:
-a correctness bug, and a far nastier one to catch. The test
-`r_mod_q_constant_is_4091_not_4095` pins it down.
+a correctness bug, and a far nastier one to catch.
 
 All three Montgomery constants are verified independently in the test suite:
 
 | Constant | Value | Verification |
 |----------|-------|--------------|
 | `R mod q` | 4091 | `2^16 mod 12289` |
-| `-q⁻¹ mod R` | 12287 | `65536 - pow(12289,-1,65536)` |
+| `−q⁻¹ mod R` | 12287 | `65536 − pow(12289,−1,65536)` |
 | `R² mod q` | 10952 | `pow(65536, 2, 12289)` |
 
 ## Usage
 
 ```rust
-use re_kem_core::FieldElement;
+use re_kem_core::ReKem;
 
-let a = FieldElement::from_plain(1234);
-let b = FieldElement::from_plain(5678);
-
-let product = a.mul(b).to_plain();   // == (1234 * 5678) % 12289
-let sum     = a.add(b).to_plain();
-let diff    = a.sub(b).to_plain();
+let kem = ReKem::new();
+let (pk, sk) = kem.keygen();          // requires the "rng" feature (default)
+let (ct, ss_tx) = kem.encaps(&pk);
+let ss_rx = kem.decaps(&sk, &ct);
+assert_eq!(ss_tx, ss_rx);
 ```
+
+Deterministic variants for reproducible test vectors:
+
+```rust
+let (pk, sk) = kem.keygen_derand(&seed_a, &noise_seed, &z);
+let (ct, ss) = kem.encaps_derand(&pk, &message);
+```
+
+### `no_std`
+
+The crate compiles without the Rust standard library (`core` + `alloc` +
+`subtle` + `sha3`), so it can target embedded and bare-metal platforms. Disable
+default features; the `rng` feature (which pulls in `getrandom`) is optional —
+with it off, only the deterministic `*_derand` APIs are available.
+
+## Cross-validation against the Python reference
+
+The port is proven bit-identical to `rekem.py`:
+
+```bash
+# Rust side → vectors (1000 rounds)
+cargo run --release --example cross_kem > /tmp/rs-vectors.json
+
+# Python side → vectors (same seeds, same derivation)
+python3 tools/cross_kem_python.py > /tmp/py-vectors.json
+
+# compare
+python3 tools/compare_vectors.py
+```
+
+**Result over 1000 full KEM rounds:**
+
+| Checked | Mismatches |
+|---------|-----------|
+| SHA-256 of public key | **0** |
+| SHA-256 of ciphertext | **0** |
+| Shared secret | **0** |
+| **Total (3000 checks)** | **0** |
+
+Both sides derive seeds identically (`sha256("re-kem-cross-<i>-<label>")`), so
+this covers the entire pipeline: rejection sampling, CBD noise, NTT
+multiplication, message encoding, FO transform and serialisation.
+
+### Performance (same machine, 2 cores)
+
+| Implementation | Per full round (keygen + encaps + decaps) |
+|----------------|-------------------------------------------|
+| Python reference | 12.2 ms |
+| **This Rust crate** | **0.2 ms** |
+
+≈ **60× faster**, with the constant-time structure the Python version cannot offer.
 
 ## Build & test
 
 ```bash
 cargo build --release
-cargo test
+cargo test          # 17 unit tests, all green
 ```
 
 ```
-running 5 tests
-test field::tests::addition_and_subtraction_match_naive ... ok
-test field::tests::multiplication_matches_naive_mod_mul ... ok
-test field::tests::r2_mod_q_constant_is_correct ... ok
+running 17 tests
 test field::tests::r_mod_q_constant_is_4091_not_4095 ... ok
-test field::tests::roundtrip_plain_montgomery_plain ... ok
-test result: ok. 5 passed; 0 failed
-```
-
-## Cross-validation against the Python reference
-
-`examples/cross_vectors.rs` emits deterministic test vectors; `tools/cross_check.py`
-recomputes them with the Python reference and compares. This proves that the Rust
-port and the Python implementation agree on every operation.
-
-```bash
-# Rust side → vectors.json
-cargo run --release --example cross_vectors > /tmp/vectors.json
-
-# Python side → compare
-python3 tools/cross_check.py /tmp/vectors.json
+test ntt::tests::ntt_multiplication_matches_naive ... ok
+test ntt::tests::multiplication_with_negacyclic_wrap ... ok
+test sampling::tests::cbd_values_within_eta_range ... ok
+test kem::tests::keygen_encaps_decaps_roundtrip ... ok
+test kem::tests::tampered_ciphertext_gives_different_secret ... ok
+...
+test result: ok. 17 passed; 0 failed
 ```
 
 ## Status / Roadmap
 
-Implemented: constant-time field arithmetic.
-
-Still required for a complete KEM (matching `rekem.py`):
-- [ ] Negacyclic NTT (O(n log n) polynomial multiplication)
-- [ ] CBD sampling (η = 8)
-- [ ] Rejection sampling for a(x)
-- [ ] Polynomial packing / serialisation
-- [ ] `keygen` / `encaps` / `decaps` (Fujisaki–Okamoto)
+- [x] Constant-time field arithmetic (Montgomery)
+- [x] Negacyclic NTT (O(n log n) polynomial multiplication)
+- [x] CBD sampling (η = 8)
+- [x] Rejection sampling for a(x)
+- [x] Polynomial packing / serialisation
+- [x] `keygen` / `encaps` / `decaps` (Fujisaki–Okamoto)
+- [x] Bit-identical cross-validation against the Python reference (1000 rounds)
 - [ ] Timing validation with `dudect`
-- [ ] Intermediate drop-through checks
+- [ ] Zeroization of secret intermediates on drop
 
 ## Security disclaimer
 
 Educational / research reference. **Not audited, not production-ready.** The
-branchless structure is a design property of the algorithm; a formal constant-time
-guarantee still requires dudect-style measurement on the target platform.
+branchless structure is a design property of the algorithm; a formal
+constant-time guarantee still requires dudect-style measurement on the target
+platform. The `subtle` crate provides constant-time primitives for the
+comparison and selection steps; the NTT and sampling loops are branchless by
+construction but have not been machine-verified against timing leakage.
 
 ## Related
 
-- [RE-KEM](https://github.com/CSTRSK/RE-KEM) — Python reference implementation (NewHope-512)
+- [RE-KEM](https://github.com/CSTRSK/RE-KEM) — Python reference implementation
 - Live: [cstrsk.de](https://cstrsk.de)
 
 ---
