@@ -160,6 +160,30 @@ Pro Runde:     0.188 ms (keygen + encaps + decaps)
 Every one of the million rounds performs a complete keygen → encaps → decaps
 cycle and asserts that the shared secrets match.
 
+### 4-hour soak test
+
+```bash
+DURATION_SECONDS=14400 cargo run --release --example soak
+```
+
+```
+Laufzeit:          14400.0 s (4.00 h)
+Runden:            75,762,512
+Roundtrip-Fehler:  0
+Tamper-Checks:     18,497 (davon durchgelassen: 0)
+Durchsatz:         5261 Runden/s
+Pro Runde:         0.190 ms (keygen + encaps + decaps)
+VmRSS Start/Ende:  2108 / 1268 kB
+Speicher-Drift:    -840 kB
+✅ SOAK-TEST BESTANDEN
+```
+
+Four hours of continuous operation, 75.7 million complete KEM cycles, zero
+failures. Beyond the roundtrip, the soak test verifies implicit rejection
+18,497 times (tampered ciphertexts must never yield the real secret) and
+tracks resident memory to catch leaks — memory stayed flat and was even
+partially returned to the OS.
+
 ## Build & test
 
 ```bash
@@ -189,6 +213,7 @@ test result: ok. 17 passed; 0 failed
 - [x] `keygen` / `encaps` / `decaps` (Fujisaki–Okamoto)
 - [x] Bit-identical cross-validation against the Python reference (10 000 rounds)
 - [x] 1 000 000-round stress test (0 failures)
+- [x] 4-hour soak test (75.7M rounds, 18,497 tamper checks, no leaks)
 - [ ] Timing validation with `dudect`
 - [ ] Zeroization of secret intermediates on drop
 
