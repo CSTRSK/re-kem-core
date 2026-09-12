@@ -160,6 +160,23 @@ Pro Runde:     0.188 ms (keygen + encaps + decaps)
 Every one of the million rounds performs a complete keygen → encaps → decaps
 cycle and asserts that the shared secrets match.
 
+**Throughput law & extrapolation:** [docs/performance-analysis.md](docs/performance-analysis.md)
+fits the four-hour data and derives
+
+```
+N(t) = 5258.15 · t          R² = 0.99999527
+T    = 190.2 µs per round   95 % CI of r: ±0.024 %
+```
+
+The linear form is not just an empirical fit — it follows from the
+implementation: every loop bound is a compile-time constant and no branch or
+iteration count depends on secret data, so each round costs a fixed `T` and
+`N(t) = t/T` holds exactly. Stationarity is confirmed by three independent
+trend tests (Kendall τ = −0.042, p = 0.33), memory shows no drift (peak RSS =
+start value), and the analysis states plainly what it does *not* prove.
+
+![Soak-test analysis](docs/soak-analysis.png)
+
 ### 4-hour soak test
 
 ```bash
