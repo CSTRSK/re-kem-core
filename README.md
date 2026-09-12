@@ -261,12 +261,37 @@ drift) and the outer 1 % of each sample is trimmed (outlier resistance).
 MEASUREMENTS=100000 cargo run --release --example timing
 ```
 
-Two experiments, 100 000 measurements each:
+Three experiments, 100 000 measurements each — one per secret-dependent
+code path that a review identified:
 
-| Experiment | t-statistic | Verdict |
-|------------|-------------|---------|
-| Valid vs. tampered ciphertext (implicit rejection path) | **−0.81** | no leak detected |
-| Two different secret keys | **+0.30** | no leak detected |
+| # | Target | t-statistic | Verdict |
+|---|--------|-------------|---------|
+| 1 | `poly_to_msg` — decaps recentring of the decrypted polynomial (valid vs. tampered ciphertext) | **−0.35** | no leak detected |
+| 2 | `decaps` — two different secret keys | **−0.16** | no leak detected |
+| 3 | `cbd_sample` — keygen/encaps noise sampling (two seeds) | **+1.30** | no leak detected |
+
+Largest |t| observed: **1.30**, against a threshold of 10.
+
+### Branchless hardening (review findings)
+
+Three places computed secret-dependent values with constructs that are
+*not* guaranteed to compile to branchless code. All are now pure bit-mask
+arithmetic, and two exhaustive regression tests pin the semantics:
+
+| Location | Was | Is |
+|----------|-----|-----|
+| `kem.rs` `poly_to_msg` | `if v > half_q { v - q } else { v }`, `if centred < 0 { -centred } else { centred }` | mask recentring (`v - (q & mask)`) + branchless `abs` (`(x + sign) ^ sign`) |
+| `kem.rs` `msg_to_poly` | `if msg_bit(m, i) == 1 { coeff = q/2 }` | `coeff = (q/2) * bit` |
+| `sampling.rs` `cbd_sample` | `(a - b).rem_euclid(q)` — branches internally on `r < 0` | `ct_reduce_once((a - b + q) as u32)`, reusing the field's masking reduction |
+
+An `if` on secret data is not reliably lowered to a `cmov`; it is
+compiler-, target- and opt-level-dependent. `ct_reduce_once` was made
+`pub(crate)` so the sampling code could reuse it rather than reach for a
+library routine with internal branches.
+
+The fixes are semantics-preserving: the Python cross-validation still shows
+0 mismatches over 1000 rounds, and `branchless_recentring_matches_naive_for_all_values`
+checks all 12 289 possible coefficient values against the naive form.
 
 Both are far below the |t| = 10 threshold. This is a *negative* result from a
 statistical heuristic, not a proof: it shows no leak is detectable by timing

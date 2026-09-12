@@ -11,7 +11,7 @@ use sha3::{Shake256, Shake256Reader};
 #[cfg(not(feature = "std"))]
 use alloc::{vec, vec::Vec};
 
-use crate::field::FieldElement;
+use crate::field::{ct_reduce_once, FieldElement};
 use crate::ntt::{Poly, N};
 
 /// CBD noise parameter (NewHope-512 regime).
@@ -58,8 +58,10 @@ pub fn cbd_sample(seed: &[u8], nonce: u8) -> Poly {
         for j in 0..ETA {
             b += bit_at(&raw, base + ETA + j) as i32;
         }
-        // coefficient in [-eta, eta]; map into Z_q
-        let v = (a - b).rem_euclid(crate::field::Q as i32) as u16;
+        // `a - b` is the secret noise coefficient, in [-eta, eta].
+        // i32::rem_euclid branches internally on `r < 0`, so add q first and
+        // use the same masking reduction as the field arithmetic.
+        let v = ct_reduce_once((a - b + crate::field::Q as i32) as u32);
         out.coeffs[i] = FieldElement::from_plain(v);
     }
     out

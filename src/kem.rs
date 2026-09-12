@@ -35,13 +35,16 @@ fn msg_bit(msg: &[u8; SEED_LEN], idx: usize) -> u8 {
 
 /// Embeds the 256 message bits into a polynomial with amplitude q/2.
 /// Coefficients beyond bit 255 stay zero (the reference zero-pads to `n`).
+///
+/// Branchless: the message is secret, so `if bit == 1 { .. }` is not used —
+/// the coefficient is simply `half * bit`, a multiplication that LLVM keeps
+/// free of data-dependent control flow.
 fn msg_to_poly(msg: &[u8; SEED_LEN]) -> Poly {
     let half = (Q / 2) as u16;
     let mut p = Poly::zero();
     for i in 0..(SEED_LEN * 8) {
-        if msg_bit(msg, i) == 1 {
-            p.coeffs[i] = FieldElement::from_plain(half);
-        }
+        let bit = msg_bit(msg, i) as u16; // 0 or 1
+        p.coeffs[i] = FieldElement::from_plain(half.wrapping_mul(bit));
     }
     p
 }
@@ -49,18 +52,30 @@ fn msg_to_poly(msg: &[u8; SEED_LEN]) -> Poly {
 /// Recovers the 256 message bits from the (recentred) coefficients.
 ///
 /// Mirrors `_ct_decode_coefficients`: a coefficient is a 1-bit if its centred
-/// magnitude exceeds q/4. Output is packed MSB-first.
+/// magnitude exceeds q/4. Runs on the *decapsulated* polynomial, i.e. on
+/// secret material, therefore entirely with bit masks — an `if` here is not
+/// guaranteed to become a `cmov`, it is compiler/target/opt-level dependent.
+/// Output is packed MSB-first.
 fn poly_to_msg(p: &Poly) -> [u8; SEED_LEN] {
     let half_q = (Q / 2) as i32;
     let quarter_q = (Q / 4) as i32;
+    let q = Q as i32;
     let mut out = [0u8; SEED_LEN];
 
     for i in 0..(SEED_LEN * 8) {
-        let v = p.coeffs[i].to_plain() as i32;
-        // recentre into (-q/2, q/2]  — branchless form kept explicit below
-        let centred = if v > half_q { v - Q as i32 } else { v };
-        let abs = if centred < 0 { -centred } else { centred };
-        let bit = (abs > quarter_q) as u8;
+        let v = p.coeffs[i].to_plain() as i32; // in [0, q)
+
+        // recentre: centred = v - q if v > half_q, else v
+        // mask = -1 when half_q - v < 0 (i.e. v > half_q), else 0
+        let mask = (half_q - v) >> 31;
+        let centred = v - (q & mask);
+
+        // branchless abs: abs(x) = (x + sign) ^ sign, sign = x >> 31
+        let sign = centred >> 31;
+        let abs = (centred + sign) ^ sign;
+
+        // bit = 1 iff abs > quarter_q
+        let bit = (((quarter_q - abs) >> 31) & 1) as u8;
         out[i / 8] |= bit << (7 - (i % 8));
     }
     out
@@ -310,5 +325,50 @@ mod tests {
         let (ct2, ss2) = kem.encaps_derand(&pk2, &[23u8; 32]);
         assert_eq!(ct1, ct2);
         assert_eq!(ss1, ss2);
+    }
+
+    /// Regression guard for the branchless recentring in `poly_to_msg`.
+    ///
+    /// An earlier revision used `v + (q & mask)` instead of `v - (q & mask)`,
+    /// which added q instead of subtracting it for every coefficient above
+    /// q/2 — silently wrong on 3072 of 12289 possible values, caught only by
+    /// the Python cross-validation. This test checks *every* value.
+    #[test]
+    fn branchless_recentring_matches_naive_for_all_values() {
+        let q = Q as i32;
+        let half_q = q / 2;
+        let quarter_q = q / 4;
+
+        for v in 0..q {
+            let mask = (half_q - v) >> 31;
+            let centred = v - (q & mask);
+            let sign = centred >> 31;
+            let abs = (centred + sign) ^ sign;
+            let got = ((quarter_q - abs) >> 31) & 1;
+
+            let n_centred = if v > half_q { v - q } else { v };
+            let n_abs = if n_centred < 0 { -n_centred } else { n_centred };
+            let want = (n_abs > quarter_q) as i32;
+
+            assert_eq!(got, want, "recentring mismatch at v = {v}");
+        }
+    }
+
+    /// Regression guard for the branchless message embedding: every bit
+    /// pattern must land on the same coefficients as the naive form.
+    #[test]
+    fn branchless_msg_embedding_matches_naive() {
+        let half = (Q / 2) as u16;
+        for byte in [0u8, 1, 0x55, 0xAA, 0xFF, 0x7F, 0x80] {
+            let msg = [byte; SEED_LEN];
+            let p = msg_to_poly(&msg);
+            for i in 0..(SEED_LEN * 8) {
+                let want = if msg_bit(&msg, i) == 1 { half } else { 0 };
+                assert_eq!(p.coeffs[i].to_plain(), want, "byte {byte:#04x} bit {i}");
+            }
+            for i in (SEED_LEN * 8)..N {
+                assert_eq!(p.coeffs[i].to_plain(), 0, "padding at {i} must stay zero");
+            }
+        }
     }
 }

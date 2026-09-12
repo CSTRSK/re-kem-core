@@ -51,8 +51,12 @@ fn montgomery_reduce(t: u32) -> u16 {
 }
 
 /// Branchless "subtract q once if a >= q", a in [0, 2q).
+///
+/// `pub(crate)` so that other modules can reuse the same masking discipline
+/// instead of reaching for `if`/`rem_euclid`, both of which may compile to
+/// data-dependent branches.
 #[inline(always)]
-fn ct_reduce_once(a: u32) -> u16 {
+pub(crate) fn ct_reduce_once(a: u32) -> u16 {
     let diff = a.wrapping_sub(Q);
     // top bit of diff is 1 (all-ones after arithmetic shift) iff a < Q
     let mask = (diff as i32 >> 31) as u32; // 0xFFFF_FFFF if a < Q, else 0

@@ -26,7 +26,7 @@
 use std::env;
 use std::time::Instant;
 
-use re_kem_core::{ReKem, CT_LEN, PK_LEN, SK_LEN};
+use re_kem_core::{cbd_sample, ReKem, CT_LEN, PK_LEN, SK_LEN};
 use sha2::{Digest, Sha256};
 
 /// Number of measurements per class, per experiment.
@@ -210,6 +210,55 @@ fn exp_secret_keys(kem: &ReKem, n: usize) -> (f64, usize, usize) {
     (t, n0, n1)
 }
 
+/// Experiment 3: CBD sampling (keygen / encaps path).
+///
+/// `cbd_sample` runs on the secret noise seed and produces the secret
+/// coefficients `r`, `e`, `e1`, `e2`. An earlier revision reduced them with
+/// `i32::rem_euclid`, which branches internally; this measures the
+/// replacement.
+fn exp_cbd_sampling(n: usize) -> (f64, usize, usize) {
+    println!("--- Experiment 3: CBD-Sampling (keygen/encaps-Pfad) ---");
+    let seed0 = derive_seed("t3-seed-0");
+    let seed1 = derive_seed("t3-seed-1");
+
+    let mut rng = Rng(0x2545F4914F6CDD1D);
+    let mut samp0: Vec<f64> = Vec::with_capacity(n);
+    let mut samp1: Vec<f64> = Vec::with_capacity(n);
+
+    for _ in 0..1000 {
+        std::hint::black_box(cbd_sample(&seed0, 0));
+    }
+
+    for _ in 0..n {
+        let class = rng.next() & 1;
+        let seed = if class == 0 { &seed0 } else { &seed1 };
+        let nonce = (rng.next() & 0xFF) as u8;
+
+        let t0 = Instant::now();
+        let poly = cbd_sample(seed, nonce);
+        let dt = t0.elapsed().as_nanos() as f64;
+        std::hint::black_box(poly);
+
+        if class == 0 {
+            samp0.push(dt);
+        } else {
+            samp1.push(dt);
+        }
+
+        if samp0.len() % 10_000 == 0 && samp1.len() == samp0.len() && !samp0.is_empty() {
+            let (t, _, _) = welch_t(&samp0, &samp1, 0.01);
+            eprintln!("  n={:>7}  t = {:>8.2}  [{}]", samp0.len(), t, verdict(t));
+        }
+    }
+
+    let (t, n0, n1) = welch_t(&samp0, &samp1, 0.01);
+    println!("  Messungen: {} / {}", n0, n1);
+    println!("  t-Statistik: {:.2}", t);
+    println!("  Bewertung: {}", verdict(t));
+    println!();
+    (t, n0, n1)
+}
+
 fn main() {
     let n = measurements();
     let kem = ReKem::new();
@@ -224,15 +273,21 @@ fn main() {
 
     let (t1, _, _) = exp_rejection_path(&kem, n);
     let (t2, _, _) = exp_secret_keys(&kem, n);
+    let (t3, _, _) = exp_cbd_sampling(n);
 
     println!("═══════════════════════════════════════════════════════");
     println!("  ZUSAMMENFASSUNG");
     println!("═══════════════════════════════════════════════════════");
-    println!("  Zurückweisungspfad:   t = {:>8.2}   {}", t1, verdict(t1));
-    println!("  Verschiedene SK:      t = {:>8.2}   {}", t2, verdict(t2));
+    println!("  #1 poly_to_msg  (decaps, Zurückweisung)  t = {:>8.2}   {}", t1, verdict(t1));
+    println!("  #2 decaps       (verschiedene SK)        t = {:>8.2}   {}", t2, verdict(t2));
+    println!("  #3 cbd_sample   (keygen/encaps)          t = {:>8.2}   {}", t3, verdict(t3));
     println!("═══════════════════════════════════════════════════════");
 
-    if t1.abs() < 10.0 && t2.abs() < 10.0 {
+    let worst = [t1, t2, t3].iter().cloned().fold(0.0f64, |a, b| if b.abs() > a.abs() { b } else { a });
+    println!("  Betragsmäßig größtes |t| = {:.2}", worst.abs());
+    println!();
+
+    if t1.abs() < 10.0 && t2.abs() < 10.0 && t3.abs() < 10.0 {
         println!("✅ Kein Timing-Leck in diesen Experimenten nachgewiesen.");
         println!("   Hinweis: fehlender Nachweis != Beweis fehlenden Lecks. dudect");
         println!("   ist eine statistische Heuristik; Wiederholung auf der Ziel-");
