@@ -299,6 +299,63 @@ on this machine. Re-measurement on the actual target platform (with a fixed
 CPU governor, pinned core, and `dudect`'s own tooling) remains advisable before
 making a production claim.
 
+## Crypto agility
+
+This crate is structured so that **changing the algorithm later is cheap** —
+a different problem from making the current algorithm stronger. Nothing below
+changes the cryptography; the byte format is unchanged and still
+cross-validates against the Python reference.
+
+| Concern | Where it lives | Why it matters later |
+|---------|----------------|----------------------|
+| **Version byte** | `src/version.rs` — every stored object is `[alg_id][len][body]` | A reader can tell which algorithm produced a blob without a side table. Reserved ids (`ReKem1024`, `MlKem768`, `X25519`, hybrid ids) are *recognised and reported as not-enabled* rather than as corruption. |
+| **KEM interface** | `src/api.rs` — `trait Kem` is object-safe (`Box<dyn Kem>`) | Callers hold an implementation chosen at runtime; switching to a second parameter set, a hybrid or ML-KEM does not touch the code that stores keys or moves ciphertexts. |
+| **Runtime registry** | `src/api.rs` — `Registry` maps id → implementation | Both the old and the new scheme can run side by side during a transition, routed by the id read from the stored object. |
+| **Parameter set** | `src/params.rs` — `Params { n, q, eta, … }`, single source of truth | `N`, `Q`, `ETA` and every byte size are *derived*. The CI job fails if a parameter literal reappears in the arithmetic modules. |
+
+```rust
+use re_kem_core::api::{Kem, Registry};
+use re_kem_core::Algorithm;
+
+// Pick at runtime — no recompilation of the caller.
+let registry = Registry::with_defaults();
+let kem = registry.get(Algorithm::ReKem512).unwrap();
+let kp = kem.keygen()?;
+let (ct, ss) = kem.encaps(&kp.public_key)?;
+# Ok::<(), re_kem_core::api::KemError>(())
+```
+
+```text
+Sizes are queried, never hard-coded:
+  pk 1056 B · sk 2144 B · ct 2048 B · ss 32 B     (from params::ACTIVE)
+```
+
+**Migration:** see [`docs/deprecation-policy.md`](docs/deprecation-policy.md).
+Short version: a KEM cannot be upgraded in place — a ciphertext's shared
+secret is fixed. What the structure buys is that old and new can coexist,
+that old data is identifiable from its bytes, and that the migration is a
+data operation rather than a code emergency.
+
+## Observation duty
+
+The parameter set is not watched automatically, and no library can watch it.
+The sources below are read at release time and logged in
+[`docs/crypto-review.md`](docs/crypto-review.md):
+
+- **NIST PQC** — status of FIPS 203/204/205, any announced successor
+- **CFRG** — `draft-irtf-cfrg-hybrid-kems` and the `LabeledHKDF` combiner
+- **BSI TR-02102-1** — current edition and its migration deadlines
+- **Ring-LWE cryptanalysis** at `n=512`, `q=12289`, `η=8`
+- **Side channels** — practical attacks on the deployment target
+
+A GitHub Actions workflow (`.github/workflows/crypto-watch.yml`) runs monthly
+and **fails once the last logged review is older than the configured window**.
+It is a reminder, not a scanner: it cannot judge whether a new paper matters,
+only that nobody has looked. The same workflow also fails if `n`, `q` or `η`
+reappear as literals outside `src/params.rs`.
+
+**Current status: reviewed 2026-09-12, no action required.**
+
 ## Production guidance
 
 RE-KEM is a research/learning implementation. If you need post-quantum

@@ -15,7 +15,10 @@ use crate::field::{FieldElement, Q};
 use zeroize::Zeroize;
 
 /// Number of coefficients.
-pub const N: usize = 512;
+/// Polynomial degree.
+///
+/// Sourced from the active parameter set. The value is unchanged.
+pub const N: usize = crate::params::ACTIVE.n;
 
 /// A polynomial with N coefficients in Montgomery form.
 ///

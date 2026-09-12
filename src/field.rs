@@ -14,7 +14,9 @@
 //! Q_INV_NEG = -q^-1 mod R is the standard REDC constant, also verified
 //! independently below (Q_INV_NEG = 12287).
 
-pub const Q: u32 = 12289;
+/// The prime modulus. Sourced from the active parameter set so that it is
+/// defined in exactly one place — the value is unchanged.
+pub const Q: u32 = crate::params::ACTIVE.q;
 /// -q^-1 mod R, R = 2^16. Verified: pow(12289, -1, 65536) = 53249,
 /// so -q^-1 mod R = 65536 - 53249 = 12287.
 const Q_INV_NEG: u32 = 12287;

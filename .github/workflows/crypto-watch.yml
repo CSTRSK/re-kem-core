@@ -1,0 +1,71 @@
+name: Crypto watch
+
+# Reminder, not a scanner. Fails when `docs/crypto-review.md` has not been
+# updated within `next_due_days`. It cannot tell whether a new paper matters —
+# only that nobody has read the sources.
+
+on:
+  schedule:
+    # First of every month, 09:00 UTC
+    - cron: '0 9 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  review-age:
+    name: Review freshness
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check how old the last crypto review is
+        run: |
+          set -euo pipefail
+
+          FILE=docs/crypto-review.md
+          if [ ! -f "$FILE" ]; then
+            echo "::error::$FILE is missing — the observation duty has no record."
+            exit 1
+          fi
+
+          LAST=$(grep -oP '^last_reviewed:\s*\K[0-9]{4}-[0-9]{2}-[0-9]{2}' "$FILE" | head -1)
+          DUE=$(grep -oP '^next_due_days:\s*\K[0-9]+' "$FILE" | head -1)
+
+          if [ -z "$LAST" ] || [ -z "$DUE" ]; then
+            echo "::error::Could not read last_reviewed / next_due_days from $FILE"
+            exit 1
+          fi
+
+          LAST_EPOCH=$(date -u -d "$LAST" +%s)
+          NOW_EPOCH=$(date -u +%s)
+          AGE_DAYS=$(( (NOW_EPOCH - LAST_EPOCH) / 86400 ))
+
+          echo "Last crypto review: $LAST (${AGE_DAYS} days ago)"
+          echo "Due after:          ${DUE} days"
+
+          if [ "$AGE_DAYS" -ge "$DUE" ]; then
+            echo "::error::Crypto review is overdue (${AGE_DAYS} >= ${DUE} days)."
+            echo "Read the sources listed in $FILE, add a dated entry, and update last_reviewed."
+            echo "This is an observation duty, not an automated scan: the point is that a human looked."
+            exit 1
+          fi
+
+          REMAINING=$(( DUE - AGE_DAYS ))
+          echo "::notice::Review is current. Next due in ${REMAINING} days."
+
+      - name: Check that parameter sets are declared, not scattered
+        run: |
+          set -euo pipefail
+          # Guard the agility invariant: n/q/eta must not reappear as literals
+          # outside params.rs. This is the check that keeps the parameter set
+          # a single source of truth as the code evolves.
+          OFFENDERS=$(grep -rn --include='*.rs' -E '^[[:space:]]*(pub )?const (N|Q|ETA)[^A-Z_].*=[[:space:]]*[0-9]' src/ || true)
+          if [ -n "$OFFENDERS" ]; then
+            echo "::error::n/q/eta defined as literals outside params.rs:"
+            echo "$OFFENDERS"
+            echo "Move the value into src/params.rs and derive it from the parameter set."
+            exit 1
+          fi
+          echo "::notice::No scattered parameter literals found."

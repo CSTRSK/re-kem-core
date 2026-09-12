@@ -19,12 +19,18 @@ use crate::field::{FieldElement, Q};
 use crate::ntt::{NttContext, Poly, N};
 use crate::sampling::{cbd_sample, decode_poly, encode_poly, expand_a};
 
-pub const SEED_LEN: usize = 32;
-pub const POLY_LEN: usize = 2 * N; // 1024
-pub const PK_LEN: usize = SEED_LEN + POLY_LEN; // 1056
-pub const SK_LEN: usize = POLY_LEN + PK_LEN + 32 + SEED_LEN; // 2144
-pub const CT_LEN: usize = 2 * POLY_LEN; // 2048
-pub const SS_LEN: usize = 32;
+/// Seed length in bytes.
+pub const SEED_LEN: usize = crate::params::ACTIVE.seed_len;
+/// Encoded polynomial length: 2 bytes per coefficient.
+pub const POLY_LEN: usize = crate::params::ACTIVE.poly_len();
+/// Public key: `seed_a || b(x)`.
+pub const PK_LEN: usize = crate::params::ACTIVE.pk_len();
+/// Secret key: `s(x) || pk || H(pk) || z`.
+pub const SK_LEN: usize = crate::params::ACTIVE.sk_len();
+/// Ciphertext: `u(x) || v(x)`.
+pub const CT_LEN: usize = crate::params::ACTIVE.ct_len();
+/// Shared secret length in bytes.
+pub const SS_LEN: usize = crate::params::ACTIVE.ss_len;
 
 /// Bits of the 32-byte message, MSB-first (matching NumPy `unpackbits`).
 #[inline]

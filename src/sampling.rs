@@ -15,7 +15,9 @@ use crate::field::{ct_reduce_once, FieldElement};
 use crate::ntt::{Poly, N};
 
 /// CBD noise parameter (NewHope-512 regime).
-pub const ETA: usize = 8;
+///
+/// Sourced from the active parameter set. The value is unchanged.
+pub const ETA: usize = crate::params::ACTIVE.eta;
 
 /// Extracts bit `idx` from a byte slice, MSB-first within each byte
 /// (matching NumPy's `unpackbits`).
