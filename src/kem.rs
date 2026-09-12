@@ -13,6 +13,7 @@ use sha3::digest::{ExtendableOutput, Update, XofReader};
 use sha3::{Digest, Sha3_256, Sha3_512, Shake256};
 
 use subtle::ConstantTimeEq;
+use zeroize::Zeroizing;
 
 use crate::field::{FieldElement, Q};
 use crate::ntt::{NttContext, Poly, N};
@@ -36,7 +37,7 @@ fn msg_bit(msg: &[u8; SEED_LEN], idx: usize) -> u8 {
 /// Coefficients beyond bit 255 stay zero (the reference zero-pads to `n`).
 fn msg_to_poly(msg: &[u8; SEED_LEN]) -> Poly {
     let half = (Q / 2) as u16;
-    let mut p = Poly::ZERO;
+    let mut p = Poly::zero();
     for i in 0..(SEED_LEN * 8) {
         if msg_bit(msg, i) == 1 {
             p.coeffs[i] = FieldElement::from_plain(half);
@@ -174,11 +175,11 @@ impl ReKem {
     /// Key generation with fresh randomness.
     #[cfg(feature = "rng")]
     pub fn keygen(&self) -> ([u8; PK_LEN], [u8; SK_LEN]) {
-        let mut buf = [0u8; 3 * SEED_LEN];
-        getrandom::getrandom(&mut buf).expect("OS randomness unavailable");
-        let mut seed_a = [0u8; SEED_LEN];
-        let mut noise_seed = [0u8; SEED_LEN];
-        let mut z = [0u8; SEED_LEN];
+        let mut buf = Zeroizing::new([0u8; 3 * SEED_LEN]);
+        getrandom::getrandom(&mut *buf).expect("OS randomness unavailable");
+        let mut seed_a = Zeroizing::new([0u8; SEED_LEN]);
+        let mut noise_seed = Zeroizing::new([0u8; SEED_LEN]);
+        let mut z = Zeroizing::new([0u8; SEED_LEN]);
         seed_a.copy_from_slice(&buf[..32]);
         noise_seed.copy_from_slice(&buf[32..64]);
         z.copy_from_slice(&buf[64..]);
@@ -188,8 +189,11 @@ impl ReKem {
     /// Deterministic encapsulation (explicit message) — for test vectors.
     pub fn encaps_derand(&self, pk: &[u8; PK_LEN], m: &[u8; SEED_LEN]) -> ([u8; CT_LEN], [u8; SS_LEN]) {
         let hp = h_pk(pk);
+        // k_bar and the encapsulation coins are secret; wipe them on scope exit.
         let (k_bar, coins) = g_fn(m, &hp);
-        let ct = pke_encrypt(&self.ctx, pk, m, &coins);
+        let k_bar = Zeroizing::new(k_bar);
+        let coins = Zeroizing::new(coins);
+        let ct = pke_encrypt(&self.ctx, pk, m, &coins[..]);
         let hc = h_ct(&ct);
         let ss = kdf(&k_bar, &hc);
         (ct, ss)
@@ -198,8 +202,8 @@ impl ReKem {
     /// Encapsulation with fresh randomness.
     #[cfg(feature = "rng")]
     pub fn encaps(&self, pk: &[u8; PK_LEN]) -> ([u8; CT_LEN], [u8; SS_LEN]) {
-        let mut m = [0u8; SEED_LEN];
-        getrandom::getrandom(&mut m).expect("OS randomness unavailable");
+        let mut m = Zeroizing::new([0u8; SEED_LEN]);
+        getrandom::getrandom(&mut *m).expect("OS randomness unavailable");
         self.encaps_derand(pk, &m)
     }
 
@@ -217,22 +221,24 @@ impl ReKem {
         let mut z = [0u8; SEED_LEN];
         z.copy_from_slice(&sk[POLY_LEN + PK_LEN + 32..]);
 
-        // 1. candidate plaintext
-        let m_prime = pke_decrypt(&self.ctx, &s, ct);
+        // 1. candidate plaintext (secret — wiped on exit)
+        let m_prime = Zeroizing::new(pke_decrypt(&self.ctx, &s, ct));
 
         // 2. re-derive the encapsulation coins
         let (k_bar_prime, coins_prime) = g_fn(&m_prime, &hp);
+        let k_bar_prime = Zeroizing::new(k_bar_prime);
+        let coins_prime = Zeroizing::new(coins_prime);
 
         // 3. re-encrypt
-        let ct_prime = pke_encrypt(&self.ctx, &pk, &m_prime, &coins_prime);
+        let ct_prime = pke_encrypt(&self.ctx, &pk, &m_prime, &coins_prime[..]);
 
         // 4. constant-time comparison (implicit rejection)
         let fail: u8 = ct.ct_eq(&ct_prime).unwrap_u8() ^ 1;
 
         // 5. shared secret: success or rejection branch
         let hc = h_ct(ct);
-        let ss_success = kdf(&k_bar_prime, &hc);
-        let ss_fail = kdf(&z, &hc);
+        let ss_success = Zeroizing::new(kdf(&k_bar_prime, &hc));
+        let ss_fail = Zeroizing::new(kdf(&z, &hc));
 
         let mut ss = [0u8; SS_LEN];
         let mask = 0u8.wrapping_sub(fail); // 0xFF if fail, 0x00 otherwise

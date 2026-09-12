@@ -101,7 +101,7 @@ let (ct, ss) = kem.encaps_derand(&pk, &message);
 ### `no_std`
 
 The crate compiles without the Rust standard library (`core` + `alloc` +
-`subtle` + `sha3`), so it can target embedded and bare-metal platforms. Disable
+`subtle` + `sha3` + `zeroize`), so it can target embedded and bare-metal platforms. Disable
 default features; the `rng` feature (which pulls in `getrandom`) is optional —
 with it off, only the deterministic `*_derand` APIs are available.
 
@@ -214,8 +214,48 @@ test result: ok. 17 passed; 0 failed
 - [x] Bit-identical cross-validation against the Python reference (10 000 rounds)
 - [x] 1 000 000-round stress test (0 failures)
 - [x] 4-hour soak test (75.7M rounds, 18,497 tamper checks, no leaks)
-- [ ] Timing validation with `dudect`
-- [ ] Zeroization of secret intermediates on drop
+- [x] Zeroization of secret intermediates on drop
+- [x] dudect-style timing analysis (no leak detected, 100k measurements)
+
+## Side-channel hardening
+
+### Zeroization
+
+Secret intermediates are wiped from memory as soon as they go out of scope:
+
+- `Poly` deliberately does **not** implement `Copy` and implements `Drop` +
+  `Zeroize` — secret polynomials (`s`, `e`, `r`, the decrypted message
+  candidate) are overwritten when dropped, so they do not linger in freed
+  memory.
+- Ephemeral byte buffers (the encapsulation message `m`, the FO coins,
+  `k_bar`, `m'`, both candidate shared secrets) use `Zeroizing<[u8; 32]>`.
+- `sha3`'s rate buffers are not explicitly zeroized; the crate wipes the
+  caller-side secrets listed above.
+
+### dudect-style timing analysis
+
+`examples/timing.rs` implements the dudect methodology (Reparaz et al.):
+run the routine many times with inputs from two classes, then apply Welch's
+t-test. |t| < 10 means the classes are not distinguishable by timing.
+Measurements are interleaved with a randomised class order (defeats slow
+drift) and the outer 1 % of each sample is trimmed (outlier resistance).
+
+```bash
+MEASUREMENTS=100000 cargo run --release --example timing
+```
+
+Two experiments, 100 000 measurements each:
+
+| Experiment | t-statistic | Verdict |
+|------------|-------------|---------|
+| Valid vs. tampered ciphertext (implicit rejection path) | **−0.81** | no leak detected |
+| Two different secret keys | **+0.30** | no leak detected |
+
+Both are far below the |t| = 10 threshold. This is a *negative* result from a
+statistical heuristic, not a proof: it shows no leak is detectable by timing
+on this machine. Re-measurement on the actual target platform (with a fixed
+CPU governor, pinned core, and `dudect`'s own tooling) remains advisable before
+making a production claim.
 
 ## Security disclaimer
 

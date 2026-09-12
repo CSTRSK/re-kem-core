@@ -47,7 +47,7 @@ pub fn cbd_sample(seed: &[u8], nonce: u8) -> Poly {
     let mut raw = vec![0u8; total_bytes];
     reader.read(&mut raw);
 
-    let mut out = Poly::ZERO;
+    let mut out = Poly::zero();
     for i in 0..N {
         let base = i * bits_per_coeff;
         let mut a: i32 = 0;
@@ -99,7 +99,7 @@ pub fn expand_a(seed: &[u8]) -> Poly {
         }
     }
 
-    let mut out = Poly::ZERO;
+    let mut out = Poly::zero();
     for i in 0..N {
         out.coeffs[i] = FieldElement::from_plain(coeffs[i]);
     }
@@ -119,7 +119,7 @@ pub fn encode_poly(p: &Poly) -> [u8; 2 * N] {
 
 /// Inverse of [`encode_poly`].
 pub fn decode_poly(data: &[u8]) -> Poly {
-    let mut out = Poly::ZERO;
+    let mut out = Poly::zero();
     for i in 0..N {
         let v = (data[2 * i] as u16) | ((data[2 * i + 1] as u16) << 8);
         out.coeffs[i] = FieldElement::from_plain(v);

@@ -12,23 +12,47 @@
 //!   5. untwisting with psi^-i
 
 use crate::field::{FieldElement, Q};
+use zeroize::Zeroize;
 
 /// Number of coefficients.
 pub const N: usize = 512;
 
 /// A polynomial with N coefficients in Montgomery form.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+///
+/// Deliberately **not** `Copy`: polynomials hold secret material (s, e, r, the
+/// decrypted message candidate). Implementing `Drop` + `Zeroize` means every
+/// such buffer is wiped when it goes out of scope, so secrets do not linger in
+/// freed memory. This costs a `Clone` at the few places that need a duplicate —
+/// a deliberate trade for a crypto type.
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Poly {
     pub coeffs: [FieldElement; N],
 }
 
+impl zeroize::Zeroize for Poly {
+    #[inline]
+    fn zeroize(&mut self) {
+        self.coeffs.iter_mut().for_each(|c| c.zeroize());
+    }
+}
+
+impl Drop for Poly {
+    #[inline]
+    fn drop(&mut self) {
+        self.zeroize();
+    }
+}
+
 impl Poly {
-    pub const ZERO: Poly = Poly {
-        coeffs: [FieldElement::zero(); N],
-    };
+    /// The all-zero polynomial.
+    pub fn zero() -> Poly {
+        Poly {
+            coeffs: [FieldElement::zero(); N],
+        }
+    }
 
     pub fn add(&self, other: &Poly) -> Poly {
-        let mut out = Poly::ZERO;
+        let mut out = Poly::zero();
         for i in 0..N {
             out.coeffs[i] = self.coeffs[i].add(other.coeffs[i]);
         }
@@ -36,7 +60,7 @@ impl Poly {
     }
 
     pub fn sub(&self, other: &Poly) -> Poly {
-        let mut out = Poly::ZERO;
+        let mut out = Poly::zero();
         for i in 0..N {
             out.coeffs[i] = self.coeffs[i].sub(other.coeffs[i]);
         }
@@ -45,7 +69,7 @@ impl Poly {
 
     /// Multiply by a scalar field element.
     pub fn scale(&self, k: FieldElement) -> Poly {
-        let mut out = Poly::ZERO;
+        let mut out = Poly::zero();
         for i in 0..N {
             out.coeffs[i] = self.coeffs[i].mul(k);
         }
@@ -200,7 +224,7 @@ impl NttContext {
         }
 
         // 5. Untwist
-        let mut out = Poly::ZERO;
+        let mut out = Poly::zero();
         for i in 0..N {
             let v = ((c_hat[i] as u64 * self.psi_inv_powers[i] as u64) % Q as u64) as u16;
             out.coeffs[i] = FieldElement::from_plain(v);
@@ -255,8 +279,8 @@ mod tests {
             a_raw[i] = ((i * 37 + 11) % Q as usize) as u16;
             b_raw[i] = ((i * 91 + 7) % Q as usize) as u16;
         }
-        let mut a = Poly::ZERO;
-        let mut b = Poly::ZERO;
+        let mut a = Poly::zero();
+        let mut b = Poly::zero();
         for i in 0..N {
             a.coeffs[i] = FieldElement::from_plain(a_raw[i]);
             b.coeffs[i] = FieldElement::from_plain(b_raw[i]);
@@ -277,8 +301,8 @@ mod tests {
     fn multiplication_with_negacyclic_wrap() {
         // X^(n-1) * X = X^n = -1  (mod X^n + 1)
         let ctx = NttContext::new();
-        let mut a = Poly::ZERO;
-        let mut b = Poly::ZERO;
+        let mut a = Poly::zero();
+        let mut b = Poly::zero();
         a.coeffs[N - 1] = FieldElement::from_plain(1);
         b.coeffs[1] = FieldElement::from_plain(1);
 

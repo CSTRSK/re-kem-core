@@ -23,8 +23,17 @@ const Q_INV_NEG: u32 = 12287;
 const R2_MOD_Q: u32 = 10952; // checked against an independent computation in tests below
 
 /// A field element permanently stored in Montgomery form (value * R mod q).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct FieldElement(u16);
+
+/// Secrets must not survive in memory any longer than necessary: this lets
+/// polynomial buffers be wiped on drop (see [`crate::ntt::Poly`]).
+impl zeroize::Zeroize for FieldElement {
+    #[inline]
+    fn zeroize(&mut self) {
+        self.0.zeroize();
+    }
+}
 
 /// Branchless Montgomery reduction: given t < q * R, returns t * R^-1 mod q,
 /// in range [0, q). No data-dependent branches; the only conditional is a
