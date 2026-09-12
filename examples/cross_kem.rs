@@ -12,7 +12,13 @@ use std::time::Instant;
 use re_kem_core::{ReKem, CT_LEN, PK_LEN, SK_LEN};
 use sha2::{Digest, Sha256};
 
-const ROUNDS: usize = 1000;
+/// Round count, overridable: ROUNDS=10000 cargo run --release --example cross_kem
+fn rounds() -> usize {
+    std::env::var("ROUNDS")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(1000)
+}
 
 /// Identical seed derivation as the Python side:
 ///     sha256(label) -> 32 bytes
@@ -30,10 +36,11 @@ fn hex_sha256(data: &[u8]) -> String {
 
 fn main() {
     let kem = ReKem::new();
+    let rounds = rounds();
     let start = Instant::now();
 
     let mut out = String::from("[\n");
-    for i in 0..ROUNDS {
+    for i in 0..rounds {
         let seed_a = derive_seed(&format!("re-kem-cross-{}-seedA", i));
         let noise = derive_seed(&format!("re-kem-cross-{}-noise", i));
         let z = derive_seed(&format!("re-kem-cross-{}-z", i));
@@ -54,7 +61,7 @@ fn main() {
             "{{\"i\":{},\"pk_sha\":\"{}\",\"ct_sha\":\"{}\",\"ss\":\"{}\"}}",
             i, pk_hash, ct_hash, ss_hex
         ));
-        if i + 1 < ROUNDS {
+        if i + 1 < rounds {
             out.push(',');
         }
         if (i + 1) % 10 == 0 {
@@ -67,8 +74,8 @@ fn main() {
     let dt = start.elapsed().as_secs_f64();
     eprintln!(
         "# Rust: {} Runden in {:.1}s ({:.1} ms/Runde)",
-        ROUNDS,
+        rounds,
         dt,
-        dt / ROUNDS as f64 * 1000.0
+        dt / rounds as f64 * 1000.0
     );
 }
