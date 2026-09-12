@@ -299,6 +299,19 @@ on this machine. Re-measurement on the actual target platform (with a fixed
 CPU governor, pinned core, and `dudect`'s own tooling) remains advisable before
 making a production claim.
 
+## Production guidance
+
+RE-KEM is a research/learning implementation. If you need post-quantum
+key establishment in production, use a standardised scheme. Concretely:
+
+| Concern | Recommendation |
+|---------|----------------|
+| **Never PQ solo** | Hybridise. Run a classical KEM (X25519) *and* the PQ KEM, concatenate both secrets through a KDF. Security holds as long as **one** component does. This is what TLS 1.3 already does (`X25519MLKEM768`), and hybrid PQ is in a large share of handshakes today. |
+| **Production KEM** | Use **ML-KEM** (FIPS 203). It is standardised, analysed and independently implemented. RE-KEM is not a security anchor — it is a study of how the construction works. |
+| **Signatures** | RE-KEM is a KEM — it cannot sign. For proofs of possession use **ML-DSA** (FIPS 204) or SLH-DSA. Do not build a signature scheme out of a KEM. |
+| **Long-lived confidentiality** | Higher security level: this crate's `n = 512` targets a NewHope-512-equivalent margin. For store-now-decrypt-later data, move to `n = 1024` (`q` must then be NTT-friendly for 1024, e.g. 12289 works) and re-run all cross-validation. |
+| **Side-channel tooling** | `dudect`-style timing is one lens. Complement it with **Miri** (undefined behaviour), **valgrind/cachegrind** (memory-access patterns, branch prediction) and a constant-time verification tool where available. A clean `|t|` does not imply a clean cache trace. |
+
 ## Security disclaimer
 
 Educational / research reference. **Not audited, not production-ready.** The
