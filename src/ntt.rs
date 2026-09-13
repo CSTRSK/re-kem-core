@@ -1,4 +1,5 @@
-//! Negacyclic Number-Theoretic Transform over Z_q, q = 12289, n = 512.
+//! Negacyclic Number-Theoretic Transform over Z_q, generic over the ring
+//! dimension n.
 //!
 //! Ported 1:1 from the Python reference (`rekem.py::_ntt`, `_poly_mul_ntt`).
 //! The mathematical result is unique, so the implementation strategy need not
@@ -10,17 +11,30 @@
 //!   3. pointwise product
 //!   4. inverse NTT with omega^-1, scaled by n^-1
 //!   5. untwisting with psi^-i
+//!
+//! ## Why const generics and not `Vec`
+//!
+//! `Poly<N>` and `NttContext<N>` are generic over the dimension. That keeps
+//! every buffer on the stack and the crate `no_std`/`no-alloc`-capable, which
+//! is what an embedded target (ESP32) needs. A `Vec`-based design would have
+//! been easier to write and unusable there.
+//!
+//! **Stable-Rust constraint:** array lengths may only use a const parameter
+//! standalone, not in arithmetic (`[u8; 2 * N]` requires the nightly
+//! `generic_const_exprs`). Byte sizes that are functions of n therefore live
+//! as separate const parameters in `kem.rs`, with the relation asserted in a
+//! test rather than assumed.
 
 use crate::field::{FieldElement, Q};
 use zeroize::Zeroize;
 
-/// Number of coefficients.
-/// Polynomial degree.
+/// Polynomial degree of the compiled-in default set.
 ///
-/// Sourced from the active parameter set. The value is unchanged.
+/// Retained for the existing API surface; the generic layer uses its own
+/// dimension parameter.
 pub const N: usize = crate::params::ACTIVE.n;
 
-/// A polynomial with N coefficients in Montgomery form.
+/// A polynomial with `N` coefficients in Montgomery form.
 ///
 /// Deliberately **not** `Copy`: polynomials hold secret material (s, e, r, the
 /// decrypted message candidate). Implementing `Drop` + `Zeroize` means every
@@ -28,33 +42,33 @@ pub const N: usize = crate::params::ACTIVE.n;
 /// freed memory. This costs a `Clone` at the few places that need a duplicate —
 /// a deliberate trade for a crypto type.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Poly {
+pub struct Poly<const N: usize> {
     pub coeffs: [FieldElement; N],
 }
 
-impl zeroize::Zeroize for Poly {
+impl<const N: usize> Zeroize for Poly<N> {
     #[inline]
     fn zeroize(&mut self) {
         self.coeffs.iter_mut().for_each(|c| c.zeroize());
     }
 }
 
-impl Drop for Poly {
+impl<const N: usize> Drop for Poly<N> {
     #[inline]
     fn drop(&mut self) {
         self.zeroize();
     }
 }
 
-impl Poly {
+impl<const N: usize> Poly<N> {
     /// The all-zero polynomial.
-    pub fn zero() -> Poly {
+    pub fn zero() -> Poly<N> {
         Poly {
             coeffs: [FieldElement::zero(); N],
         }
     }
 
-    pub fn add(&self, other: &Poly) -> Poly {
+    pub fn add(&self, other: &Poly<N>) -> Poly<N> {
         let mut out = Poly::zero();
         for i in 0..N {
             out.coeffs[i] = self.coeffs[i].add(other.coeffs[i]);
@@ -62,7 +76,7 @@ impl Poly {
         out
     }
 
-    pub fn sub(&self, other: &Poly) -> Poly {
+    pub fn sub(&self, other: &Poly<N>) -> Poly<N> {
         let mut out = Poly::zero();
         for i in 0..N {
             out.coeffs[i] = self.coeffs[i].sub(other.coeffs[i]);
@@ -71,7 +85,7 @@ impl Poly {
     }
 
     /// Multiply by a scalar field element.
-    pub fn scale(&self, k: FieldElement) -> Poly {
+    pub fn scale(&self, k: FieldElement) -> Poly<N> {
         let mut out = Poly::zero();
         for i in 0..N {
             out.coeffs[i] = self.coeffs[i].mul(k);
@@ -80,9 +94,9 @@ impl Poly {
     }
 }
 
-/// Precomputed twiddle factors for the negacyclic NTT.
+/// Precomputed twiddle factors for the negacyclic NTT of dimension `N`.
 #[derive(Clone)]
-pub struct NttContext {
+pub struct NttContext<const N: usize> {
     /// psi^i mod q — used for twisting.
     psi_powers: [u16; N],
     /// psi^-i mod q — used for untwisting.
@@ -125,9 +139,9 @@ fn find_primitive_root_2n(q: u32, n: u32) -> u16 {
     panic!("no 2n-th root of unity found");
 }
 
-impl NttContext {
+impl<const N: usize> NttContext<N> {
     /// Builds the context (deterministic, no secret input).
-    pub fn new() -> NttContext {
+    pub fn new() -> NttContext<N> {
         let psi = find_primitive_root_2n(Q, N as u32);
         let psi_inv = pow_mod(psi as u32, Q - 2, Q) as u16; // Fermat inverse
         let omega = pow_mod(psi as u32, 2, Q) as u16;
@@ -200,14 +214,16 @@ impl NttContext {
     }
 
     /// Negacyclic polynomial multiplication mod (X^n + 1).
-    pub fn mul(&self, a: &Poly, b: &Poly) -> Poly {
+    pub fn mul(&self, a: &Poly<N>, b: &Poly<N>) -> Poly<N> {
         let mut a_tw = [0u16; N];
         let mut b_tw = [0u16; N];
 
         // 1. Twist
         for i in 0..N {
-            a_tw[i] = ((a.coeffs[i].to_plain() as u64 * self.psi_powers[i] as u64) % Q as u64) as u16;
-            b_tw[i] = ((b.coeffs[i].to_plain() as u64 * self.psi_powers[i] as u64) % Q as u64) as u16;
+            a_tw[i] =
+                ((a.coeffs[i].to_plain() as u64 * self.psi_powers[i] as u64) % Q as u64) as u16;
+            b_tw[i] =
+                ((b.coeffs[i].to_plain() as u64 * self.psi_powers[i] as u64) % Q as u64) as u16;
         }
 
         // 2. Forward NTT
@@ -241,7 +257,7 @@ mod tests {
     use super::*;
 
     /// Naive schoolbook negacyclic multiplication for cross-checking.
-    fn naive_mul(a: &[u16; N], b: &[u16; N]) -> [u16; N] {
+    fn naive_mul<const N: usize>(a: &[u16; N], b: &[u16; N]) -> [u16; N] {
         let mut out = [0u32; N];
         for i in 0..N {
             for j in 0..N {
@@ -263,55 +279,74 @@ mod tests {
         res
     }
 
-    #[test]
-    fn psi_is_primitive_2n_root() {
-        let ctx = NttContext::new();
-        let psi = ctx.psi() as u32;
-        // psi^n == -1 mod q  <=>  psi^(2n) == 1
-        assert_eq!(pow_mod(psi, 2 * N as u32, Q), 1);
-        assert_eq!(pow_mod(psi, N as u32, Q), Q - 1);
-    }
-
-    #[test]
-    fn ntt_multiplication_matches_naive() {
-        let ctx = NttContext::new();
+    fn check_dim<const N: usize>() {
+        let ctx = NttContext::<N>::new();
         let mut a_raw = [0u16; N];
         let mut b_raw = [0u16; N];
-        // deterministic spread of values
         for i in 0..N {
             a_raw[i] = ((i * 37 + 11) % Q as usize) as u16;
             b_raw[i] = ((i * 91 + 7) % Q as usize) as u16;
         }
-        let mut a = Poly::zero();
-        let mut b = Poly::zero();
+        let mut a = Poly::<N>::zero();
+        let mut b = Poly::<N>::zero();
         for i in 0..N {
             a.coeffs[i] = FieldElement::from_plain(a_raw[i]);
             b.coeffs[i] = FieldElement::from_plain(b_raw[i]);
         }
-
         let got = ctx.mul(&a, &b);
-        let expected = naive_mul(&a_raw, &b_raw);
+        let expected = naive_mul::<N>(&a_raw, &b_raw);
         for i in 0..N {
             assert_eq!(
                 got.coeffs[i].to_plain(),
                 expected[i],
-                "mismatch at coefficient {i}"
+                "n={N}: mismatch at coefficient {i}"
             );
         }
     }
 
     #[test]
+    fn psi_is_primitive_2n_root() {
+        for dim in [512usize, 1024] {
+            match dim {
+                512 => {
+                    let ctx = NttContext::<512>::new();
+                    let psi = ctx.psi() as u32;
+                    assert_eq!(pow_mod(psi, 1024, Q), 1);
+                    assert_eq!(pow_mod(psi, 512, Q), Q - 1);
+                }
+                _ => {
+                    let ctx = NttContext::<1024>::new();
+                    let psi = ctx.psi() as u32;
+                    assert_eq!(pow_mod(psi, 2048, Q), 1);
+                    assert_eq!(pow_mod(psi, 1024, Q), Q - 1);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn ntt_multiplication_matches_naive_n512() {
+        check_dim::<512>();
+    }
+
+    /// The new dimension: same arithmetic, larger ring. Validated against the
+    /// naive schoolbook product, not against the 512 path.
+    #[test]
+    fn ntt_multiplication_matches_naive_n1024() {
+        check_dim::<1024>();
+    }
+
+    #[test]
     fn multiplication_with_negacyclic_wrap() {
-        // X^(n-1) * X = X^n = -1  (mod X^n + 1)
-        let ctx = NttContext::new();
-        let mut a = Poly::zero();
-        let mut b = Poly::zero();
-        a.coeffs[N - 1] = FieldElement::from_plain(1);
+        let ctx = NttContext::<512>::new();
+        let mut a = Poly::<512>::zero();
+        let mut b = Poly::<512>::zero();
+        a.coeffs[511] = FieldElement::from_plain(1);
         b.coeffs[1] = FieldElement::from_plain(1);
 
         let c = ctx.mul(&a, &b);
         assert_eq!(c.coeffs[0].to_plain(), Q as u16 - 1, "X^n must wrap to -1");
-        for i in 1..N {
+        for i in 1..512 {
             assert_eq!(c.coeffs[i].to_plain(), 0);
         }
     }

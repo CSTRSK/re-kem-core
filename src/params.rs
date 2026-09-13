@@ -89,26 +89,32 @@ pub const NEWHOPE_512: Params = Params {
     analysed: true,
 };
 
-/// **Reserved, not wired up.** `n = 1024` at the same modulus.
+/// **Second parameter set: `n = 1024`.**
 ///
-/// `q = 12289` is NTT-friendly up to `n = 4096` (`q - 1 = 12288 = 2^12 * 3`,
-/// so a primitive `2n`-th root of unity exists for every `n` that is a power
-/// of two up to 4096). Adding this set therefore requires no new arithmetic
-/// primitives — only the generic plumbing described in
-/// `docs/deprecation-policy.md`.
+/// `q = 12289` is NTT-friendly up to `n = 4096` (`q − 1 = 12288 = 2¹² · 3`, so
+/// a primitive `2n`-th root of unity exists for every power of two up to
+/// 4096), so no new arithmetic primitive is needed — the same code runs with
+/// larger tables.
 ///
-/// It is defined here so that the sizes are already known and the version
-/// byte has something to point at. It is **not** offered as an algorithm
-/// until the full cross-validation suite has been run against a second
-/// reference implementation.
+/// **Basis for offering it:** the failure probability of *this crate's*
+/// encoding at this dimension is derived in `docs/error-probability.md` from
+/// the noise model (upper bound ≈ 5.96e−57 per round, ≈ 2⁻¹⁸⁷), and the
+/// implementation is byte-identical to the Python reference over 1000 rounds
+/// at `n = 1024`.
+///
+/// **This does not inherit the NewHope-1024 analysis.** That work assumes a
+/// 4-fold redundant per-bit encoding; this crate zero-pads. The distinction is
+/// the reason `analysed` is a per-set field rather than a property of the
+/// parameter triple, and why the derivation above was required before the set
+/// could be marked analysed.
 pub const LEVEL5_1024: Params = Params {
     n: 1024,
     q: 12289,
     eta: 8,
     seed_len: 32,
     ss_len: 32,
-    name: "RE-KEM n=1024 (reserved, not validated)",
-    analysed: false,
+    name: "RE-KEM n=1024",
+    analysed: true,
 };
 
 /// The parameter set compiled into this build.

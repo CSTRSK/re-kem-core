@@ -68,8 +68,18 @@ impl Algorithm {
     /// cannot yet process — that is the difference between "unknown format"
     /// and "known format, this build is too old", which is the difference
     /// between a silent failure and a clear error.
+    ///
+    /// `ReKem1024` is offered because its failure probability for this
+    /// crate's encoding has been derived (`docs/error-probability.md`) and it
+    /// cross-validates byte-for-byte at that dimension. `MlKem*` and the
+    /// hybrid ids remain reserved until implemented.
     pub const fn is_offered(self) -> bool {
-        matches!(self, Algorithm::ReKem512 | Algorithm::HybridReKem512X25519)
+        matches!(
+            self,
+            Algorithm::ReKem512
+                | Algorithm::ReKem1024
+                | Algorithm::HybridReKem512X25519
+        )
     }
 
     /// Decode an identifier byte.
@@ -270,16 +280,20 @@ mod tests {
 
     #[test]
     fn reserved_algorithm_parses_but_is_not_offered() {
-        // A newer writer may produce n=1024 data. An older reader must
+        // A newer writer may produce ML-KEM data. An older reader must
         // recognise it and say so, rather than reporting a corrupt blob.
-        let env = Envelope::new(Algorithm::ReKem1024, vec![0u8; 16]);
+        let env = Envelope::new(Algorithm::MlKem768, vec![0u8; 16]);
         let bytes = env.encode();
         assert!(Envelope::decode(&bytes).is_ok());
         assert_eq!(
             Envelope::decode_supported(&bytes),
-            Err(VersionError::NotOffered(Algorithm::ReKem1024))
+            Err(VersionError::NotOffered(Algorithm::MlKem768))
         );
-        assert!(!Algorithm::ReKem1024.is_offered());
+        assert!(!Algorithm::MlKem768.is_offered());
+        // ... whereas n=1024 is offered, so its envelope decodes cleanly.
+        assert!(Algorithm::ReKem1024.is_offered());
+        let ok = Envelope::new(Algorithm::ReKem1024, vec![0u8; 16]).encode();
+        assert!(Envelope::decode_supported(&ok).is_ok());
     }
 
     #[test]

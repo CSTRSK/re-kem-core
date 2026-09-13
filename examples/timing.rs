@@ -226,7 +226,7 @@ fn exp_cbd_sampling(n: usize) -> (f64, usize, usize) {
     let mut samp1: Vec<f64> = Vec::with_capacity(n);
 
     for _ in 0..1000 {
-        std::hint::black_box(cbd_sample(&seed0, 0));
+        std::hint::black_box(cbd_sample::<512>(&seed0, 0));
     }
 
     for _ in 0..n {
@@ -235,7 +235,7 @@ fn exp_cbd_sampling(n: usize) -> (f64, usize, usize) {
         let nonce = (rng.next() & 0xFF) as u8;
 
         let t0 = Instant::now();
-        let poly = cbd_sample(seed, nonce);
+        let poly = cbd_sample::<512>(seed, nonce);
         let dt = t0.elapsed().as_nanos() as f64;
         std::hint::black_box(poly);
 

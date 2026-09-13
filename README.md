@@ -34,6 +34,8 @@ This crate is that port.
 |------|-------|
 | Dimension `n` | 512 |
 | Modulus `q` | 12289 (NTT-friendly: 12·1024 + 1) |
+| Parameter sets | `n = 512` (`ReKem`, default) · `n = 1024` (`ReKem1024`) |
+| Failure probability | n=512: ≤ 3.24e−103 · n=1024: ≤ 5.96e−57 (2⁻¹⁸⁷) — [derivation](docs/error-probability.md) |
 | Noise `η` (eta) | 8 |
 | Ring | Z_q[X] / (X^512 + 1) |
 | Security | IND-CCA2 (Fujisaki–Okamoto, implicit rejection) |
@@ -345,7 +347,7 @@ cross-validates against the Python reference.
 
 | Concern | Where it lives | Why it matters later |
 |---------|----------------|----------------------|
-| **Version byte** | `src/version.rs` — every stored object is `[alg_id][len][body]` | A reader can tell which algorithm produced a blob without a side table. Reserved ids (`ReKem1024`, `MlKem768`, `X25519`, hybrid ids) are *recognised and reported as not-enabled* rather than as corruption. |
+| **Version byte** | `src/version.rs` — every stored object is `[alg_id][len][body]` | A reader can tell which algorithm produced a blob without a side table. Ids that are recognised but not offered (`MlKem768`, `MlKem1024`, `X25519`, hybrid ids) are *reported as not-enabled* rather than as corruption. `ReKem1024` is offered. |
 | **KEM interface** | `src/api.rs` — `trait Kem` is object-safe (`Box<dyn Kem>`) | Callers hold an implementation chosen at runtime; switching to a second parameter set, a hybrid or ML-KEM does not touch the code that stores keys or moves ciphertexts. |
 | **Runtime registry** | `src/api.rs` — `Registry` maps id → implementation | Both the old and the new scheme can run side by side during a transition, routed by the id read from the stored object. |
 | **Parameter set** | `src/params.rs` — `Params { n, q, eta, … }`, single source of truth | `N`, `Q`, `ETA` and every byte size are *derived*. The CI job fails if a parameter literal reappears in the arithmetic modules. |
@@ -403,7 +405,7 @@ key establishment in production, use a standardised scheme. Concretely:
 | **Never PQ solo** | Hybridise. Run a classical KEM (X25519) *and* the PQ KEM, concatenate both secrets through a KDF. Security holds as long as **one** component does. This is what TLS 1.3 already does (`X25519MLKEM768`), and hybrid PQ is in a large share of handshakes today. |
 | **Production KEM** | Use **ML-KEM** (FIPS 203). It is standardised, analysed and independently implemented. RE-KEM is not a security anchor — it is a study of how the construction works. |
 | **Signatures** | RE-KEM is a KEM — it cannot sign. For proofs of possession use **ML-DSA** (FIPS 204) or SLH-DSA. Do not build a signature scheme out of a KEM. |
-| **Long-lived confidentiality** | Higher security level: this crate's `n = 512` targets a NewHope-512-equivalent margin. For store-now-decrypt-later data, move to `n = 1024` (`q` must then be NTT-friendly for 1024, e.g. 12289 works) and re-run all cross-validation. |
+| **Long-lived confidentiality** | Higher security level: this crate's `n = 512` targets a NewHope-512-equivalent margin. For store-now-decrypt-later data, `n = 1024` is available in this crate (`ReKem1024`), with its failure probability derived in [`docs/error-probability.md`](docs/error-probability.md). Note that a larger `n` changes the decapsulation failure probability — it must be re-derived per dimension, and the published NewHope-1024 figures do **not** transfer, because they assume a 4-fold redundant encoding while this crate zero-pads. |
 | **Side-channel tooling** | `dudect`-style timing is one lens. Complement it with **Miri** (undefined behaviour), **valgrind/cachegrind** (memory-access patterns, branch prediction) and a constant-time verification tool where available. A clean `|t|` does not imply a clean cache trace. |
 
 ## Security disclaimer

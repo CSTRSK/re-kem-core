@@ -7,30 +7,39 @@
 //! ## Cryptography
 //!
 //! ```text
-//! Ring:    Z_q[X] / (X^n + 1),  n = 512, q = 12289, eta = 8
+//! Ring:     Z_q[X] / (X^n + 1),  q = 12289, eta = 8
+//! Sets:     n = 512 (default), n = 1024
 //! Security: IND-CCA2 via Fujisaki-Okamoto
 //! ```
 //!
 //! ## Structure
 //!
-//! The crate separates three concerns deliberately:
+//! The crate separates concerns deliberately:
 //!
 //! | Module | Responsibility |
 //! |--------|----------------|
-//! | [`params`] | The parameter set — the *only* place `n`, `q`, `eta` live |
+//! | [`params`] | The parameter sets — the *only* place `n`, `q`, `eta` live |
 //! | [`version`] | Algorithm identifiers and self-describing envelopes |
 //! | [`api`] | The [`api::Kem`] trait and a runtime [`api::Registry`] |
+//! | [`ntt`], [`sampling`], [`kem`] | The arithmetic and the KEM, generic over `n` |
 //!
-//! The cryptographic core ([`field`], [`ntt`], [`sampling`], [`kem`]) is
-//! unchanged and cross-validated byte-for-byte against the Python reference.
-//! The three modules above add no mathematics — they make a later change of
-//! parameters or algorithm cheap, which is a different problem from making
-//! the current one stronger.
+//! ## Two parameter sets
+//!
+//! ```text
+//! ReKem      n=512   pk 1056 B   sk 2144 B   ct 2048 B
+//! ReKem1024  n=1024  pk 2080 B   sk 4192 B   ct 4096 B
+//! ```
+//!
+//! Availability of `n = 1024` rests on a **documented error-probability
+//! derivation for this crate's zero-padding encoding** (`docs/error-probability.md`)
+//! plus byte-level cross-validation against the Python reference at the same
+//! dimension — *not* on the published NewHope-1024 analysis, which assumes a
+//! 4-fold redundant per-bit encoding. See that document before relying on it.
 //!
 //! ## Example
 //!
 //! ```
-//! use re_kem_core::{api::{Kem, KeyPair}, ReKem};
+//! use re_kem_core::ReKem;
 //!
 //! let kem = ReKem::new();
 //! let (pk, sk) = kem.keygen();
@@ -52,7 +61,10 @@ pub mod sampling;
 pub mod version;
 
 pub use field::{FieldElement, Q};
-pub use kem::{ReKem, CT_LEN, PK_LEN, SEED_LEN, SK_LEN, SS_LEN};
+pub use kem::{
+    KemGeneric, ReKem, ReKem1024, CT_LEN, CT_LEN_1024, PK_LEN, PK_LEN_1024, SEED_LEN, SK_LEN,
+    SK_LEN_1024, SS_LEN,
+};
 pub use ntt::{Poly, N};
 pub use params::{Params, ACTIVE, LEVEL5_1024, NEWHOPE_512};
 pub use sampling::{cbd_sample, expand_a};

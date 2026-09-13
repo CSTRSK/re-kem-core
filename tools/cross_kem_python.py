@@ -8,7 +8,11 @@ Die Rust-Seite (examples/cross_kem.rs) rechnet mit denselben Seeds — die
 Ergebnisse müssen bit-identisch sein.
 
 Usage:
-    python3 tools/cross_kem_python.py > /tmp/py-vectors.json
+    python3 tools/cross_kem_python.py [rounds] [dim]
+        rounds  — default 1000
+        dim     — ring dimension, default 512
+
+The Rust side is `examples/cross_kem.rs` with the same ROUNDS / DIM.
 """
 import hashlib
 import json
@@ -25,8 +29,9 @@ def derive_seed(label: str) -> bytes:
 
 
 def main():
-    kem = PostQuantumRingLWEKEM()  # n=512, q=12289, eta=8
     rounds = int(sys.argv[1]) if len(sys.argv) > 1 else 1000
+    dim = int(sys.argv[2]) if len(sys.argv) > 2 else 512
+    kem = PostQuantumRingLWEKEM(n=dim, q=12289, eta=8)
     out = []
     t0 = time.time()
 
@@ -65,7 +70,7 @@ def main():
 
     json.dump(out, sys.stdout, indent=0)
     dt = time.time() - t0
-    print(f"\n# Python: {rounds} Runden in {dt:.1f}s ({dt/rounds*1000:.1f} ms/Runde)",
+    print(f"\n# Python n={dim}: {rounds} Runden in {dt:.1f}s ({dt/rounds*1000:.1f} ms/Runde)",
           file=sys.stderr)
 
 
