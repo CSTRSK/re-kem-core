@@ -201,6 +201,42 @@ failures. Beyond the roundtrip, the soak test verifies implicit rejection
 tracks resident memory to catch leaks — memory stayed flat and was even
 partially returned to the OS.
 
+### 14-hour soak test (chained)
+
+A single-process run was not long enough for confidence, so the 14-hour target
+was met by chaining two independent soak runs back-to-back (`soak.log` = 8 h,
+`soak2.log` = 6 h), each followed by the same analysis pipeline. The totals
+below are the raw sums of the two runs — no smoothing, no rounding to round
+numbers.
+
+```
+Lauf 1 (8 h):   150,796,898 Runden | 0 Fehler | 36,816 Tamper-Checks | 5236 Runden/s
+Lauf 2 (6 h):   113,106,844 Runden | 0 Fehler | 27,614 Tamper-Checks | 5243 Runden/s
+─────────────────────────────────────────────────────────────────────────────
+GESAMT (14 h):  263,903,742 Runden | 0 Fehler | 64,430 Tamper-Checks
+```
+
+| Metric | Value |
+|--------|-------|
+| Wall-clock covered | 50,372 s = 13.992 h |
+| Complete KEM cycles | **263,903,742** |
+| Roundtrip failures | **0** |
+| Tamper checks (implicit rejection) | **64,430** — 0 accepted |
+| Mean throughput | **5239.096 rounds/s** |
+| Per round | 0.191 ms (keygen + encaps + decaps) |
+| Memory, run 1 | VmRSS 2120 → 1420 kB, drift −700 kB |
+| Memory, run 2 | VmRSS 2104 → 1908 kB, drift −196 kB |
+
+Zero roundtrip failures over 263.9 million full KEM cycles, and not a single
+tampered ciphertext was accepted across 64,430 implicit-rejection checks.
+Resident memory did not grow in either run — both ended *below* their start
+value, so there is no leak signal. The per-run regression (model B,
+`N(t) = r·t`) gives r = 5236.04 rounds/s (R² = 0.99999989) for run 1 and
+r = 5246.07 rounds/s (R² = 0.99999874) for run 2; both are stationary by the
+Kendall/Spearman/OLS trend tests, with memory drift negative and significant
+in both. Raw logs and the analyzer live in `soak.log` / `soak2.log` and
+`tools/analyze_soak.py`.
+
 ## Build & test
 
 ```bash
@@ -231,6 +267,7 @@ test result: ok. 17 passed; 0 failed
 - [x] Bit-identical cross-validation against the Python reference (10 000 rounds)
 - [x] 1 000 000-round stress test (0 failures)
 - [x] 4-hour soak test (75.7M rounds, 18,497 tamper checks, no leaks)
+- [x] 14-hour soak test, chained (263.9M rounds, 64,430 tamper checks, 0 failures, no leaks)
 - [x] Zeroization of secret intermediates on drop
 - [x] dudect-style timing analysis (no leak detected, 100k measurements)
 

@@ -1,0 +1,379 @@
+    Finished `release` profile [optimized] target(s) in 0.03s
+     Running `target/release/examples/soak`
+Pre-flight self-test: OK
+Modus: 21572 Sekunden (5.99 h)
+VmRSS Start: 2104 kB
+
+[   60.0s]       315297 Runden |    5255/s (Ø    5255/s) | Fehler 0 | Tamper 0/77 | RSS 2104 kB
+[  120.0s]       626058 Runden |    5179/s (Ø    5217/s) | Fehler 0 | Tamper 0/153 | RSS 2104 kB
+[  180.0s]       941243 Runden |    5253/s (Ø    5229/s) | Fehler 0 | Tamper 0/230 | RSS 2104 kB
+[  240.0s]      1253950 Runden |    5212/s (Ø    5225/s) | Fehler 0 | Tamper 0/307 | RSS 2104 kB
+[  300.0s]      1571457 Runden |    5292/s (Ø    5238/s) | Fehler 0 | Tamper 0/384 | RSS 2104 kB
+[  360.0s]      1886026 Runden |    5243/s (Ø    5239/s) | Fehler 0 | Tamper 0/461 | RSS 2104 kB
+[  420.0s]      2197118 Runden |    5185/s (Ø    5231/s) | Fehler 0 | Tamper 0/537 | RSS 2104 kB
+[  480.0s]      2513175 Runden |    5268/s (Ø    5236/s) | Fehler 0 | Tamper 0/614 | RSS 2104 kB
+[  540.0s]      2827617 Runden |    5241/s (Ø    5236/s) | Fehler 0 | Tamper 0/691 | RSS 2104 kB
+[  600.0s]      3142438 Runden |    5247/s (Ø    5237/s) | Fehler 0 | Tamper 0/768 | RSS 2104 kB
+[  660.0s]      3459725 Runden |    5288/s (Ø    5242/s) | Fehler 0 | Tamper 0/845 | RSS 2104 kB
+[  720.0s]      3768488 Runden |    5146/s (Ø    5234/s) | Fehler 0 | Tamper 0/921 | RSS 2104 kB
+[  780.0s]      4082535 Runden |    5234/s (Ø    5234/s) | Fehler 0 | Tamper 0/997 | RSS 2104 kB
+[  840.0s]      4397454 Runden |    5249/s (Ø    5235/s) | Fehler 0 | Tamper 0/1074 | RSS 2104 kB
+[  900.0s]      4712405 Runden |    5249/s (Ø    5236/s) | Fehler 0 | Tamper 0/1151 | RSS 2104 kB
+[  960.0s]      5025789 Runden |    5223/s (Ø    5235/s) | Fehler 0 | Tamper 0/1227 | RSS 2104 kB
+[ 1020.0s]      5333871 Runden |    5135/s (Ø    5229/s) | Fehler 0 | Tamper 0/1303 | RSS 2104 kB
+[ 1080.0s]      5648304 Runden |    5241/s (Ø    5230/s) | Fehler 0 | Tamper 0/1379 | RSS 2104 kB
+[ 1140.0s]      5964066 Runden |    5263/s (Ø    5232/s) | Fehler 0 | Tamper 0/1457 | RSS 2104 kB
+[ 1200.0s]      6281152 Runden |    5285/s (Ø    5234/s) | Fehler 0 | Tamper 0/1534 | RSS 2104 kB
+[ 1260.0s]      6596378 Runden |    5254/s (Ø    5235/s) | Fehler 0 | Tamper 0/1611 | RSS 2104 kB
+[ 1320.0s]      6907915 Runden |    5192/s (Ø    5233/s) | Fehler 0 | Tamper 0/1687 | RSS 2104 kB
+[ 1380.0s]      7221126 Runden |    5220/s (Ø    5233/s) | Fehler 0 | Tamper 0/1763 | RSS 2104 kB
+[ 1440.0s]      7537050 Runden |    5265/s (Ø    5234/s) | Fehler 0 | Tamper 0/1841 | RSS 2104 kB
+[ 1500.0s]      7853195 Runden |    5269/s (Ø    5235/s) | Fehler 0 | Tamper 0/1918 | RSS 2104 kB
+[ 1560.0s]      8164677 Runden |    5191/s (Ø    5234/s) | Fehler 0 | Tamper 0/1994 | RSS 2104 kB
+[ 1620.0s]      8470772 Runden |    5102/s (Ø    5229/s) | Fehler 0 | Tamper 0/2069 | RSS 2104 kB
+[ 1680.0s]      8786345 Runden |    5260/s (Ø    5230/s) | Fehler 0 | Tamper 0/2146 | RSS 2104 kB
+[ 1740.0s]      9100877 Runden |    5242/s (Ø    5230/s) | Fehler 0 | Tamper 0/2222 | RSS 2104 kB
+[ 1800.0s]      9411954 Runden |    5185/s (Ø    5229/s) | Fehler 0 | Tamper 0/2298 | RSS 2104 kB
+[ 1860.0s]      9728513 Runden |    5276/s (Ø    5230/s) | Fehler 0 | Tamper 0/2376 | RSS 2104 kB
+[ 1920.0s]     10039839 Runden |    5189/s (Ø    5229/s) | Fehler 0 | Tamper 0/2452 | RSS 2104 kB
+[ 1980.0s]     10351968 Runden |    5202/s (Ø    5228/s) | Fehler 0 | Tamper 0/2528 | RSS 2104 kB
+[ 2040.0s]     10667427 Runden |    5258/s (Ø    5229/s) | Fehler 0 | Tamper 0/2605 | RSS 2104 kB
+[ 2100.0s]     10984357 Runden |    5282/s (Ø    5231/s) | Fehler 0 | Tamper 0/2682 | RSS 2104 kB
+[ 2160.0s]     11302379 Runden |    5300/s (Ø    5233/s) | Fehler 0 | Tamper 0/2760 | RSS 2104 kB
+[ 2220.0s]     11612777 Runden |    5173/s (Ø    5231/s) | Fehler 0 | Tamper 0/2836 | RSS 2104 kB
+[ 2280.0s]     11926922 Runden |    5236/s (Ø    5231/s) | Fehler 0 | Tamper 0/2912 | RSS 2104 kB
+[ 2340.0s]     12241699 Runden |    5246/s (Ø    5231/s) | Fehler 0 | Tamper 0/2989 | RSS 2104 kB
+[ 2400.0s]     12554739 Runden |    5217/s (Ø    5231/s) | Fehler 0 | Tamper 0/3066 | RSS 2104 kB
+[ 2460.0s]     12868242 Runden |    5225/s (Ø    5231/s) | Fehler 0 | Tamper 0/3142 | RSS 2104 kB
+[ 2520.0s]     13178983 Runden |    5179/s (Ø    5230/s) | Fehler 0 | Tamper 0/3218 | RSS 2104 kB
+[ 2580.0s]     13496820 Runden |    5297/s (Ø    5231/s) | Fehler 0 | Tamper 0/3296 | RSS 2104 kB
+[ 2640.0s]     13812614 Runden |    5263/s (Ø    5232/s) | Fehler 0 | Tamper 0/3373 | RSS 2104 kB
+[ 2700.0s]     14128829 Runden |    5270/s (Ø    5233/s) | Fehler 0 | Tamper 0/3450 | RSS 2104 kB
+[ 2760.0s]     14442923 Runden |    5235/s (Ø    5233/s) | Fehler 0 | Tamper 0/3527 | RSS 2104 kB
+[ 2820.0s]     14751678 Runden |    5146/s (Ø    5231/s) | Fehler 0 | Tamper 0/3602 | RSS 2104 kB
+[ 2880.0s]     15067020 Runden |    5256/s (Ø    5232/s) | Fehler 0 | Tamper 0/3679 | RSS 2104 kB
+[ 2940.0s]     15384548 Runden |    5292/s (Ø    5233/s) | Fehler 0 | Tamper 0/3756 | RSS 2104 kB
+[ 3000.0s]     15703068 Runden |    5309/s (Ø    5234/s) | Fehler 0 | Tamper 0/3834 | RSS 2104 kB
+[ 3060.0s]     16020248 Runden |    5286/s (Ø    5235/s) | Fehler 0 | Tamper 0/3912 | RSS 2104 kB
+[ 3120.0s]     16323946 Runden |    5062/s (Ø    5232/s) | Fehler 0 | Tamper 0/3986 | RSS 2104 kB
+[ 3180.0s]     16636002 Runden |    5201/s (Ø    5231/s) | Fehler 0 | Tamper 0/4062 | RSS 2104 kB
+[ 3240.0s]     16953355 Runden |    5289/s (Ø    5232/s) | Fehler 0 | Tamper 0/4140 | RSS 2104 kB
+[ 3300.0s]     17270949 Runden |    5293/s (Ø    5234/s) | Fehler 0 | Tamper 0/4217 | RSS 2104 kB
+[ 3360.0s]     17588585 Runden |    5294/s (Ø    5235/s) | Fehler 0 | Tamper 0/4295 | RSS 2104 kB
+[ 3420.0s]     17893441 Runden |    5081/s (Ø    5232/s) | Fehler 0 | Tamper 0/4369 | RSS 2104 kB
+[ 3480.0s]     18204395 Runden |    5183/s (Ø    5231/s) | Fehler 0 | Tamper 0/4445 | RSS 2104 kB
+[ 3540.0s]     18522054 Runden |    5294/s (Ø    5232/s) | Fehler 0 | Tamper 0/4522 | RSS 2104 kB
+[ 3600.0s]     18838278 Runden |    5270/s (Ø    5233/s) | Fehler 0 | Tamper 0/4600 | RSS 2104 kB
+[ 3660.0s]     19155442 Runden |    5286/s (Ø    5234/s) | Fehler 0 | Tamper 0/4677 | RSS 2104 kB
+[ 3720.0s]     19465882 Runden |    5174/s (Ø    5233/s) | Fehler 0 | Tamper 0/4753 | RSS 2104 kB
+[ 3780.0s]     19784432 Runden |    5309/s (Ø    5234/s) | Fehler 0 | Tamper 0/4831 | RSS 2104 kB
+[ 3840.0s]     20100494 Runden |    5268/s (Ø    5234/s) | Fehler 0 | Tamper 0/4908 | RSS 2104 kB
+[ 3900.0s]     20416049 Runden |    5259/s (Ø    5235/s) | Fehler 0 | Tamper 0/4985 | RSS 2104 kB
+[ 3960.0s]     20730826 Runden |    5246/s (Ø    5235/s) | Fehler 0 | Tamper 0/5062 | RSS 2104 kB
+[ 4020.0s]     21044951 Runden |    5235/s (Ø    5235/s) | Fehler 0 | Tamper 0/5138 | RSS 2104 kB
+[ 4080.0s]     21361071 Runden |    5269/s (Ø    5236/s) | Fehler 0 | Tamper 0/5216 | RSS 2104 kB
+[ 4140.0s]     21679247 Runden |    5303/s (Ø    5237/s) | Fehler 0 | Tamper 0/5293 | RSS 2104 kB
+[ 4200.0s]     21997118 Runden |    5298/s (Ø    5237/s) | Fehler 0 | Tamper 0/5371 | RSS 2104 kB
+[ 4260.0s]     22312536 Runden |    5257/s (Ø    5238/s) | Fehler 0 | Tamper 0/5448 | RSS 2104 kB
+[ 4320.0s]     22624584 Runden |    5201/s (Ø    5237/s) | Fehler 0 | Tamper 0/5524 | RSS 2104 kB
+[ 4380.0s]     22939082 Runden |    5242/s (Ø    5237/s) | Fehler 0 | Tamper 0/5601 | RSS 2104 kB
+[ 4440.0s]     23257095 Runden |    5300/s (Ø    5238/s) | Fehler 0 | Tamper 0/5679 | RSS 2104 kB
+[ 4500.0s]     23573243 Runden |    5269/s (Ø    5238/s) | Fehler 0 | Tamper 0/5756 | RSS 2104 kB
+[ 4560.0s]     23893358 Runden |    5335/s (Ø    5240/s) | Fehler 0 | Tamper 0/5834 | RSS 2104 kB
+[ 4620.0s]     24208060 Runden |    5245/s (Ø    5240/s) | Fehler 0 | Tamper 0/5911 | RSS 2104 kB
+[ 4680.0s]     24525438 Runden |    5290/s (Ø    5240/s) | Fehler 0 | Tamper 0/5988 | RSS 2104 kB
+[ 4740.0s]     24841488 Runden |    5267/s (Ø    5241/s) | Fehler 0 | Tamper 0/6065 | RSS 2104 kB
+[ 4800.0s]     25159677 Runden |    5303/s (Ø    5242/s) | Fehler 0 | Tamper 0/6143 | RSS 2104 kB
+[ 4860.0s]     25476831 Runden |    5286/s (Ø    5242/s) | Fehler 0 | Tamper 0/6220 | RSS 2104 kB
+[ 4920.0s]     25792132 Runden |    5255/s (Ø    5242/s) | Fehler 0 | Tamper 0/6297 | RSS 2104 kB
+[ 4980.0s]     26109263 Runden |    5286/s (Ø    5243/s) | Fehler 0 | Tamper 0/6375 | RSS 2104 kB
+[ 5040.0s]     26426481 Runden |    5287/s (Ø    5243/s) | Fehler 0 | Tamper 0/6452 | RSS 2104 kB
+[ 5100.0s]     26744502 Runden |    5300/s (Ø    5244/s) | Fehler 0 | Tamper 0/6530 | RSS 2104 kB
+[ 5160.0s]     27061568 Runden |    5284/s (Ø    5244/s) | Fehler 0 | Tamper 0/6607 | RSS 2104 kB
+[ 5220.0s]     27360163 Runden |    4977/s (Ø    5241/s) | Fehler 0 | Tamper 0/6680 | RSS 2104 kB
+[ 5280.0s]     27674853 Runden |    5245/s (Ø    5241/s) | Fehler 0 | Tamper 0/6757 | RSS 2104 kB
+[ 5340.0s]     27988754 Runden |    5232/s (Ø    5241/s) | Fehler 0 | Tamper 0/6834 | RSS 2104 kB
+[ 5400.0s]     28306371 Runden |    5294/s (Ø    5242/s) | Fehler 0 | Tamper 0/6911 | RSS 2104 kB
+[ 5460.0s]     28622539 Runden |    5269/s (Ø    5242/s) | Fehler 0 | Tamper 0/6988 | RSS 2104 kB
+[ 5520.0s]     28934941 Runden |    5207/s (Ø    5242/s) | Fehler 0 | Tamper 0/7065 | RSS 2104 kB
+[ 5580.0s]     29251981 Runden |    5284/s (Ø    5242/s) | Fehler 0 | Tamper 0/7142 | RSS 2104 kB
+[ 5640.0s]     29568111 Runden |    5269/s (Ø    5243/s) | Fehler 0 | Tamper 0/7219 | RSS 2104 kB
+[ 5700.0s]     29884556 Runden |    5274/s (Ø    5243/s) | Fehler 0 | Tamper 0/7297 | RSS 2104 kB
+[ 5760.0s]     30203074 Runden |    5309/s (Ø    5244/s) | Fehler 0 | Tamper 0/7374 | RSS 2104 kB
+[ 5820.0s]     30515715 Runden |    5211/s (Ø    5243/s) | Fehler 0 | Tamper 0/7451 | RSS 2104 kB
+[ 5880.0s]     30828434 Runden |    5212/s (Ø    5243/s) | Fehler 0 | Tamper 0/7527 | RSS 2104 kB
+[ 5940.0s]     31146633 Runden |    5303/s (Ø    5244/s) | Fehler 0 | Tamper 0/7605 | RSS 2104 kB
+[ 6000.0s]     31464751 Runden |    5302/s (Ø    5244/s) | Fehler 0 | Tamper 0/7682 | RSS 2104 kB
+[ 6060.0s]     31783947 Runden |    5320/s (Ø    5245/s) | Fehler 0 | Tamper 0/7760 | RSS 2104 kB
+[ 6120.0s]     32098358 Runden |    5240/s (Ø    5245/s) | Fehler 0 | Tamper 0/7837 | RSS 2104 kB
+[ 6180.0s]     32411490 Runden |    5219/s (Ø    5245/s) | Fehler 0 | Tamper 0/7913 | RSS 2104 kB
+[ 6240.0s]     32728610 Runden |    5285/s (Ø    5245/s) | Fehler 0 | Tamper 0/7991 | RSS 2104 kB
+[ 6300.0s]     33042026 Runden |    5224/s (Ø    5245/s) | Fehler 0 | Tamper 0/8067 | RSS 2104 kB
+[ 6360.0s]     33350775 Runden |    5146/s (Ø    5244/s) | Fehler 0 | Tamper 0/8143 | RSS 2104 kB
+[ 6420.0s]     33660408 Runden |    5161/s (Ø    5243/s) | Fehler 0 | Tamper 0/8218 | RSS 2104 kB
+[ 6480.0s]     33973532 Runden |    5219/s (Ø    5243/s) | Fehler 0 | Tamper 0/8295 | RSS 2104 kB
+[ 6540.0s]     34286750 Runden |    5220/s (Ø    5243/s) | Fehler 0 | Tamper 0/8371 | RSS 2104 kB
+[ 6600.0s]     34601352 Runden |    5243/s (Ø    5243/s) | Fehler 0 | Tamper 0/8448 | RSS 2104 kB
+[ 6660.0s]     34917266 Runden |    5265/s (Ø    5243/s) | Fehler 0 | Tamper 0/8525 | RSS 2104 kB
+[ 6720.0s]     35226969 Runden |    5162/s (Ø    5242/s) | Fehler 0 | Tamper 0/8601 | RSS 2104 kB
+[ 6780.0s]     35541319 Runden |    5239/s (Ø    5242/s) | Fehler 0 | Tamper 0/8678 | RSS 2104 kB
+[ 6840.0s]     35855204 Runden |    5231/s (Ø    5242/s) | Fehler 0 | Tamper 0/8754 | RSS 2104 kB
+[ 6900.0s]     36171170 Runden |    5266/s (Ø    5242/s) | Fehler 0 | Tamper 0/8831 | RSS 2104 kB
+[ 6960.0s]     36486456 Runden |    5255/s (Ø    5242/s) | Fehler 0 | Tamper 0/8908 | RSS 2104 kB
+[ 7020.0s]     36794604 Runden |    5136/s (Ø    5241/s) | Fehler 0 | Tamper 0/8984 | RSS 2104 kB
+[ 7080.0s]     37108979 Runden |    5240/s (Ø    5241/s) | Fehler 0 | Tamper 0/9060 | RSS 2104 kB
+[ 7140.0s]     37423941 Runden |    5249/s (Ø    5241/s) | Fehler 0 | Tamper 0/9137 | RSS 2104 kB
+[ 7200.0s]     37740207 Runden |    5271/s (Ø    5242/s) | Fehler 0 | Tamper 0/9214 | RSS 2104 kB
+[ 7260.0s]     38056133 Runden |    5265/s (Ø    5242/s) | Fehler 0 | Tamper 0/9292 | RSS 2104 kB
+[ 7320.0s]     38363429 Runden |    5122/s (Ø    5241/s) | Fehler 0 | Tamper 0/9367 | RSS 2104 kB
+[ 7380.0s]     38678361 Runden |    5249/s (Ø    5241/s) | Fehler 0 | Tamper 0/9443 | RSS 2104 kB
+[ 7440.0s]     38997097 Runden |    5312/s (Ø    5242/s) | Fehler 0 | Tamper 0/9521 | RSS 2104 kB
+[ 7500.0s]     39314301 Runden |    5287/s (Ø    5242/s) | Fehler 0 | Tamper 0/9599 | RSS 2104 kB
+[ 7560.0s]     39631478 Runden |    5286/s (Ø    5242/s) | Fehler 0 | Tamper 0/9676 | RSS 2104 kB
+[ 7620.0s]     39944580 Runden |    5218/s (Ø    5242/s) | Fehler 0 | Tamper 0/9753 | RSS 2104 kB
+[ 7680.0s]     40256798 Runden |    5204/s (Ø    5242/s) | Fehler 0 | Tamper 0/9829 | RSS 2104 kB
+[ 7740.0s]     40573396 Runden |    5277/s (Ø    5242/s) | Fehler 0 | Tamper 0/9906 | RSS 2104 kB
+[ 7800.0s]     40888753 Runden |    5256/s (Ø    5242/s) | Fehler 0 | Tamper 0/9983 | RSS 2104 kB
+[ 7860.0s]     41205659 Runden |    5282/s (Ø    5242/s) | Fehler 0 | Tamper 0/10060 | RSS 2104 kB
+[ 7920.0s]     41519312 Runden |    5228/s (Ø    5242/s) | Fehler 0 | Tamper 0/10137 | RSS 2104 kB
+[ 7980.0s]     41834923 Runden |    5260/s (Ø    5242/s) | Fehler 0 | Tamper 0/10214 | RSS 2104 kB
+[ 8040.0s]     42153475 Runden |    5309/s (Ø    5243/s) | Fehler 0 | Tamper 0/10292 | RSS 2104 kB
+[ 8100.0s]     42473957 Runden |    5341/s (Ø    5244/s) | Fehler 0 | Tamper 0/10370 | RSS 2104 kB
+[ 8160.0s]     42793094 Runden |    5319/s (Ø    5244/s) | Fehler 0 | Tamper 0/10448 | RSS 2104 kB
+[ 8220.0s]     43109772 Runden |    5278/s (Ø    5244/s) | Fehler 0 | Tamper 0/10525 | RSS 2104 kB
+[ 8280.0s]     43427068 Runden |    5288/s (Ø    5245/s) | Fehler 0 | Tamper 0/10603 | RSS 2104 kB
+[ 8340.0s]     43744973 Runden |    5298/s (Ø    5245/s) | Fehler 0 | Tamper 0/10680 | RSS 2104 kB
+[ 8400.0s]     44065157 Runden |    5336/s (Ø    5246/s) | Fehler 0 | Tamper 0/10759 | RSS 2104 kB
+[ 8460.0s]     44384305 Runden |    5319/s (Ø    5246/s) | Fehler 0 | Tamper 0/10837 | RSS 2104 kB
+[ 8520.0s]     44698583 Runden |    5238/s (Ø    5246/s) | Fehler 0 | Tamper 0/10913 | RSS 2104 kB
+[ 8580.0s]     45016722 Runden |    5302/s (Ø    5247/s) | Fehler 0 | Tamper 0/10991 | RSS 2104 kB
+[ 8640.0s]     45329034 Runden |    5205/s (Ø    5246/s) | Fehler 0 | Tamper 0/11067 | RSS 2104 kB
+[ 8700.0s]     45643016 Runden |    5233/s (Ø    5246/s) | Fehler 0 | Tamper 0/11144 | RSS 2104 kB
+[ 8760.0s]     45958008 Runden |    5250/s (Ø    5246/s) | Fehler 0 | Tamper 0/11221 | RSS 2104 kB
+[ 8820.0s]     46264791 Runden |    5113/s (Ø    5245/s) | Fehler 0 | Tamper 0/11296 | RSS 2104 kB
+[ 8880.0s]     46576567 Runden |    5196/s (Ø    5245/s) | Fehler 0 | Tamper 0/11372 | RSS 2104 kB
+[ 8940.0s]     46892287 Runden |    5262/s (Ø    5245/s) | Fehler 0 | Tamper 0/11449 | RSS 2104 kB
+[ 9000.0s]     47209663 Runden |    5290/s (Ø    5245/s) | Fehler 0 | Tamper 0/11526 | RSS 2104 kB
+[ 9060.0s]     47524235 Runden |    5243/s (Ø    5245/s) | Fehler 0 | Tamper 0/11603 | RSS 2104 kB
+[ 9120.0s]     47840518 Runden |    5271/s (Ø    5246/s) | Fehler 0 | Tamper 0/11680 | RSS 2104 kB
+[ 9180.0s]     48159167 Runden |    5311/s (Ø    5246/s) | Fehler 0 | Tamper 0/11758 | RSS 2104 kB
+[ 9240.0s]     48476860 Runden |    5295/s (Ø    5246/s) | Fehler 0 | Tamper 0/11836 | RSS 2104 kB
+[ 9300.0s]     48790865 Runden |    5233/s (Ø    5246/s) | Fehler 0 | Tamper 0/11912 | RSS 2104 kB
+[ 9360.0s]     49104527 Runden |    5228/s (Ø    5246/s) | Fehler 0 | Tamper 0/11989 | RSS 2104 kB
+[ 9420.0s]     49417368 Runden |    5214/s (Ø    5246/s) | Fehler 0 | Tamper 0/12065 | RSS 2104 kB
+[ 9480.0s]     49730917 Runden |    5226/s (Ø    5246/s) | Fehler 0 | Tamper 0/12142 | RSS 2104 kB
+[ 9540.0s]     50048926 Runden |    5300/s (Ø    5246/s) | Fehler 0 | Tamper 0/12219 | RSS 2104 kB
+[ 9600.0s]     50366891 Runden |    5299/s (Ø    5247/s) | Fehler 0 | Tamper 0/12297 | RSS 2104 kB
+[ 9660.0s]     50682652 Runden |    5263/s (Ø    5247/s) | Fehler 0 | Tamper 0/12374 | RSS 2104 kB
+[ 9720.0s]     50993893 Runden |    5187/s (Ø    5246/s) | Fehler 0 | Tamper 0/12450 | RSS 2104 kB
+[ 9780.0s]     51309365 Runden |    5258/s (Ø    5246/s) | Fehler 0 | Tamper 0/12527 | RSS 2104 kB
+[ 9840.0s]     51626570 Runden |    5287/s (Ø    5247/s) | Fehler 0 | Tamper 0/12605 | RSS 2104 kB
+[ 9900.0s]     51945793 Runden |    5320/s (Ø    5247/s) | Fehler 0 | Tamper 0/12683 | RSS 2104 kB
+[ 9960.0s]     52265736 Runden |    5332/s (Ø    5248/s) | Fehler 0 | Tamper 0/12761 | RSS 2104 kB
+[10020.0s]     52578093 Runden |    5206/s (Ø    5247/s) | Fehler 0 | Tamper 0/12837 | RSS 2104 kB
+[10080.0s]     52892770 Runden |    5245/s (Ø    5247/s) | Fehler 0 | Tamper 0/12914 | RSS 2104 kB
+[10140.0s]     53209837 Runden |    5284/s (Ø    5247/s) | Fehler 0 | Tamper 0/12991 | RSS 2104 kB
+[10200.0s]     53527121 Runden |    5288/s (Ø    5248/s) | Fehler 0 | Tamper 0/13069 | RSS 2104 kB
+[10260.0s]     53843169 Runden |    5267/s (Ø    5248/s) | Fehler 0 | Tamper 0/13146 | RSS 2104 kB
+[10320.0s]     54153091 Runden |    5165/s (Ø    5247/s) | Fehler 0 | Tamper 0/13221 | RSS 2104 kB
+[10380.0s]     54467752 Runden |    5244/s (Ø    5247/s) | Fehler 0 | Tamper 0/13298 | RSS 2104 kB
+[10440.0s]     54787119 Runden |    5323/s (Ø    5248/s) | Fehler 0 | Tamper 0/13376 | RSS 2104 kB
+[10500.0s]     55105694 Runden |    5310/s (Ø    5248/s) | Fehler 0 | Tamper 0/13454 | RSS 2104 kB
+[10560.0s]     55423957 Runden |    5304/s (Ø    5248/s) | Fehler 0 | Tamper 0/13532 | RSS 2104 kB
+[10620.0s]     55734940 Runden |    5183/s (Ø    5248/s) | Fehler 0 | Tamper 0/13608 | RSS 2104 kB
+[10680.0s]     56053177 Runden |    5304/s (Ø    5248/s) | Fehler 0 | Tamper 0/13685 | RSS 2104 kB
+[10740.0s]     56370361 Runden |    5286/s (Ø    5249/s) | Fehler 0 | Tamper 0/13763 | RSS 2104 kB
+[10800.0s]     56689919 Runden |    5326/s (Ø    5249/s) | Fehler 0 | Tamper 0/13841 | RSS 2104 kB
+[10860.0s]     57006954 Runden |    5284/s (Ø    5249/s) | Fehler 0 | Tamper 0/13918 | RSS 2104 kB
+[10920.0s]     57320348 Runden |    5223/s (Ø    5249/s) | Fehler 0 | Tamper 0/13995 | RSS 2104 kB
+[10980.0s]     57634895 Runden |    5242/s (Ø    5249/s) | Fehler 0 | Tamper 0/14072 | RSS 2104 kB
+[11040.0s]     57951399 Runden |    5275/s (Ø    5249/s) | Fehler 0 | Tamper 0/14149 | RSS 2104 kB
+[11100.0s]     58266002 Runden |    5243/s (Ø    5249/s) | Fehler 0 | Tamper 0/14226 | RSS 2104 kB
+[11160.0s]     58582176 Runden |    5270/s (Ø    5249/s) | Fehler 0 | Tamper 0/14303 | RSS 2104 kB
+[11220.0s]     58896915 Runden |    5246/s (Ø    5249/s) | Fehler 0 | Tamper 0/14380 | RSS 2104 kB
+[11280.0s]     59213184 Runden |    5271/s (Ø    5249/s) | Fehler 0 | Tamper 0/14457 | RSS 2104 kB
+[11340.0s]     59530000 Runden |    5280/s (Ø    5250/s) | Fehler 0 | Tamper 0/14534 | RSS 2104 kB
+[11400.0s]     59849087 Runden |    5318/s (Ø    5250/s) | Fehler 0 | Tamper 0/14612 | RSS 2104 kB
+[11460.0s]     60164954 Runden |    5264/s (Ø    5250/s) | Fehler 0 | Tamper 0/14689 | RSS 2104 kB
+[11520.0s]     60474555 Runden |    5160/s (Ø    5250/s) | Fehler 0 | Tamper 0/14765 | RSS 2104 kB
+[11580.0s]     60785837 Runden |    5188/s (Ø    5249/s) | Fehler 0 | Tamper 0/14841 | RSS 2104 kB
+[11640.1s]     61098603 Runden |    5213/s (Ø    5249/s) | Fehler 0 | Tamper 0/14917 | RSS 2104 kB
+[11700.1s]     61410212 Runden |    5193/s (Ø    5249/s) | Fehler 0 | Tamper 0/14993 | RSS 2104 kB
+[11760.1s]     61723603 Runden |    5223/s (Ø    5249/s) | Fehler 0 | Tamper 0/15070 | RSS 2104 kB
+[11820.1s]     62033148 Runden |    5159/s (Ø    5248/s) | Fehler 0 | Tamper 0/15145 | RSS 2104 kB
+[11880.1s]     62349222 Runden |    5268/s (Ø    5248/s) | Fehler 0 | Tamper 0/15222 | RSS 2104 kB
+[11940.1s]     62665852 Runden |    5277/s (Ø    5248/s) | Fehler 0 | Tamper 0/15300 | RSS 2104 kB
+[12000.1s]     62984587 Runden |    5312/s (Ø    5249/s) | Fehler 0 | Tamper 0/15378 | RSS 2104 kB
+[12060.1s]     63302098 Runden |    5292/s (Ø    5249/s) | Fehler 0 | Tamper 0/15455 | RSS 2104 kB
+[12120.1s]     63615842 Runden |    5229/s (Ø    5249/s) | Fehler 0 | Tamper 0/15532 | RSS 2104 kB
+[12180.1s]     63932089 Runden |    5271/s (Ø    5249/s) | Fehler 0 | Tamper 0/15609 | RSS 2104 kB
+[12240.1s]     64250271 Runden |    5303/s (Ø    5249/s) | Fehler 0 | Tamper 0/15687 | RSS 2104 kB
+[12300.1s]     64567201 Runden |    5282/s (Ø    5249/s) | Fehler 0 | Tamper 0/15764 | RSS 2104 kB
+[12360.1s]     64884270 Runden |    5284/s (Ø    5250/s) | Fehler 0 | Tamper 0/15841 | RSS 2104 kB
+[12420.1s]     65192476 Runden |    5137/s (Ø    5249/s) | Fehler 0 | Tamper 0/15917 | RSS 2104 kB
+[12480.1s]     65506585 Runden |    5235/s (Ø    5249/s) | Fehler 0 | Tamper 0/15993 | RSS 2104 kB
+[12540.1s]     65822077 Runden |    5258/s (Ø    5249/s) | Fehler 0 | Tamper 0/16070 | RSS 2104 kB
+[12600.1s]     66138774 Runden |    5278/s (Ø    5249/s) | Fehler 0 | Tamper 0/16148 | RSS 2104 kB
+[12660.1s]     66455565 Runden |    5280/s (Ø    5249/s) | Fehler 0 | Tamper 0/16225 | RSS 2104 kB
+[12720.1s]     66768353 Runden |    5213/s (Ø    5249/s) | Fehler 0 | Tamper 0/16301 | RSS 2104 kB
+[12780.1s]     67087149 Runden |    5313/s (Ø    5249/s) | Fehler 0 | Tamper 0/16379 | RSS 2104 kB
+[12840.1s]     67403364 Runden |    5270/s (Ø    5249/s) | Fehler 0 | Tamper 0/16456 | RSS 2104 kB
+[12900.1s]     67721246 Runden |    5298/s (Ø    5250/s) | Fehler 0 | Tamper 0/16534 | RSS 2104 kB
+[12960.1s]     68036486 Runden |    5254/s (Ø    5250/s) | Fehler 0 | Tamper 0/16611 | RSS 2104 kB
+[13020.1s]     68346907 Runden |    5174/s (Ø    5249/s) | Fehler 0 | Tamper 0/16687 | RSS 2104 kB
+[13080.1s]     68661940 Runden |    5251/s (Ø    5249/s) | Fehler 0 | Tamper 0/16764 | RSS 2104 kB
+[13140.1s]     68978425 Runden |    5275/s (Ø    5249/s) | Fehler 0 | Tamper 0/16841 | RSS 2104 kB
+[13200.1s]     69296311 Runden |    5298/s (Ø    5250/s) | Fehler 0 | Tamper 0/16919 | RSS 2104 kB
+[13260.1s]     69614400 Runden |    5301/s (Ø    5250/s) | Fehler 0 | Tamper 0/16996 | RSS 2104 kB
+[13320.1s]     69925724 Runden |    5189/s (Ø    5250/s) | Fehler 0 | Tamper 0/17072 | RSS 2104 kB
+[13380.1s]     70243015 Runden |    5288/s (Ø    5250/s) | Fehler 0 | Tamper 0/17150 | RSS 2104 kB
+[13440.1s]     70559332 Runden |    5272/s (Ø    5250/s) | Fehler 0 | Tamper 0/17227 | RSS 2104 kB
+[13500.1s]     70877278 Runden |    5299/s (Ø    5250/s) | Fehler 0 | Tamper 0/17305 | RSS 2104 kB
+[13560.1s]     71194393 Runden |    5285/s (Ø    5250/s) | Fehler 0 | Tamper 0/17382 | RSS 2104 kB
+[13620.1s]     71510317 Runden |    5265/s (Ø    5250/s) | Fehler 0 | Tamper 0/17459 | RSS 2104 kB
+[13680.1s]     71823279 Runden |    5216/s (Ø    5250/s) | Fehler 0 | Tamper 0/17535 | RSS 2104 kB
+[13740.1s]     72140884 Runden |    5293/s (Ø    5250/s) | Fehler 0 | Tamper 0/17613 | RSS 2104 kB
+[13800.1s]     72457943 Runden |    5284/s (Ø    5251/s) | Fehler 0 | Tamper 0/17690 | RSS 2104 kB
+[13860.1s]     72775260 Runden |    5289/s (Ø    5251/s) | Fehler 0 | Tamper 0/17768 | RSS 2104 kB
+[13920.1s]     73089232 Runden |    5233/s (Ø    5251/s) | Fehler 0 | Tamper 0/17845 | RSS 2104 kB
+[13980.1s]     73402380 Runden |    5219/s (Ø    5251/s) | Fehler 0 | Tamper 0/17921 | RSS 2104 kB
+[14040.1s]     73716750 Runden |    5239/s (Ø    5250/s) | Fehler 0 | Tamper 0/17998 | RSS 2104 kB
+[14100.1s]     74030788 Runden |    5234/s (Ø    5250/s) | Fehler 0 | Tamper 0/18074 | RSS 2104 kB
+[14160.1s]     74348594 Runden |    5297/s (Ø    5251/s) | Fehler 0 | Tamper 0/18152 | RSS 2104 kB
+[14220.1s]     74655330 Runden |    5112/s (Ø    5250/s) | Fehler 0 | Tamper 0/18227 | RSS 2104 kB
+[14280.1s]     74970956 Runden |    5260/s (Ø    5250/s) | Fehler 0 | Tamper 0/18304 | RSS 2104 kB
+[14340.1s]     75286909 Runden |    5266/s (Ø    5250/s) | Fehler 0 | Tamper 0/18381 | RSS 2104 kB
+[14400.1s]     75602100 Runden |    5253/s (Ø    5250/s) | Fehler 0 | Tamper 0/18458 | RSS 2104 kB
+[14460.1s]     75914211 Runden |    5202/s (Ø    5250/s) | Fehler 0 | Tamper 0/18534 | RSS 2104 kB
+[14520.1s]     76225545 Runden |    5189/s (Ø    5250/s) | Fehler 0 | Tamper 0/18610 | RSS 2104 kB
+[14580.1s]     76541355 Runden |    5263/s (Ø    5250/s) | Fehler 0 | Tamper 0/18687 | RSS 2104 kB
+[14640.1s]     76859553 Runden |    5303/s (Ø    5250/s) | Fehler 0 | Tamper 0/18765 | RSS 2104 kB
+[14700.1s]     77175242 Runden |    5261/s (Ø    5250/s) | Fehler 0 | Tamper 0/18842 | RSS 2104 kB
+[14760.1s]     77491926 Runden |    5278/s (Ø    5250/s) | Fehler 0 | Tamper 0/18919 | RSS 2104 kB
+[14820.1s]     77802650 Runden |    5179/s (Ø    5250/s) | Fehler 0 | Tamper 0/18995 | RSS 2104 kB
+[14880.1s]     78120183 Runden |    5292/s (Ø    5250/s) | Fehler 0 | Tamper 0/19073 | RSS 2104 kB
+[14940.1s]     78435992 Runden |    5263/s (Ø    5250/s) | Fehler 0 | Tamper 0/19150 | RSS 2104 kB
+[15000.1s]     78749763 Runden |    5230/s (Ø    5250/s) | Fehler 0 | Tamper 0/19227 | RSS 2104 kB
+[15060.1s]     79063324 Runden |    5226/s (Ø    5250/s) | Fehler 0 | Tamper 0/19303 | RSS 2104 kB
+[15120.1s]     79373315 Runden |    5167/s (Ø    5250/s) | Fehler 0 | Tamper 0/19379 | RSS 2104 kB
+[15180.1s]     79688681 Runden |    5256/s (Ø    5250/s) | Fehler 0 | Tamper 0/19456 | RSS 2104 kB
+[15240.1s]     80005343 Runden |    5278/s (Ø    5250/s) | Fehler 0 | Tamper 0/19533 | RSS 2104 kB
+[15300.1s]     80319683 Runden |    5239/s (Ø    5250/s) | Fehler 0 | Tamper 0/19610 | RSS 2104 kB
+[15360.1s]     80634685 Runden |    5250/s (Ø    5250/s) | Fehler 0 | Tamper 0/19687 | RSS 2104 kB
+[15420.1s]     80949096 Runden |    5240/s (Ø    5250/s) | Fehler 0 | Tamper 0/19763 | RSS 2104 kB
+[15480.1s]     81266135 Runden |    5284/s (Ø    5250/s) | Fehler 0 | Tamper 0/19841 | RSS 2104 kB
+[15540.1s]     81580725 Runden |    5243/s (Ø    5250/s) | Fehler 0 | Tamper 0/19918 | RSS 2104 kB
+[15600.1s]     81899007 Runden |    5305/s (Ø    5250/s) | Fehler 0 | Tamper 0/19995 | RSS 2104 kB
+[15660.1s]     82217136 Runden |    5302/s (Ø    5250/s) | Fehler 0 | Tamper 0/20073 | RSS 2104 kB
+[15720.1s]     82531040 Runden |    5232/s (Ø    5250/s) | Fehler 0 | Tamper 0/20150 | RSS 2104 kB
+[15780.1s]     82849571 Runden |    5309/s (Ø    5250/s) | Fehler 0 | Tamper 0/20227 | RSS 2104 kB
+[15840.1s]     83165786 Runden |    5270/s (Ø    5250/s) | Fehler 0 | Tamper 0/20305 | RSS 2104 kB
+[15900.1s]     83482852 Runden |    5284/s (Ø    5250/s) | Fehler 0 | Tamper 0/20382 | RSS 2104 kB
+[15960.1s]     83800377 Runden |    5292/s (Ø    5251/s) | Fehler 0 | Tamper 0/20460 | RSS 2104 kB
+[16020.1s]     84106982 Runden |    5110/s (Ø    5250/s) | Fehler 0 | Tamper 0/20534 | RSS 2104 kB
+[16080.1s]     84423264 Runden |    5271/s (Ø    5250/s) | Fehler 0 | Tamper 0/20612 | RSS 2104 kB
+[16140.1s]     84737026 Runden |    5229/s (Ø    5250/s) | Fehler 0 | Tamper 0/20688 | RSS 2104 kB
+[16200.1s]     85034797 Runden |    4963/s (Ø    5249/s) | Fehler 0 | Tamper 0/20761 | RSS 2104 kB
+[16260.1s]     85335883 Runden |    5018/s (Ø    5248/s) | Fehler 0 | Tamper 0/20834 | RSS 2104 kB
+[16320.1s]     85648056 Runden |    5203/s (Ø    5248/s) | Fehler 0 | Tamper 0/20911 | RSS 2104 kB
+[16380.1s]     85962591 Runden |    5242/s (Ø    5248/s) | Fehler 0 | Tamper 0/20987 | RSS 2104 kB
+[16440.1s]     86274533 Runden |    5199/s (Ø    5248/s) | Fehler 0 | Tamper 0/21064 | RSS 2104 kB
+[16500.1s]     86588836 Runden |    5238/s (Ø    5248/s) | Fehler 0 | Tamper 0/21140 | RSS 2104 kB
+[16560.1s]     86898617 Runden |    5163/s (Ø    5247/s) | Fehler 0 | Tamper 0/21216 | RSS 2104 kB
+[16620.1s]     87205639 Runden |    5117/s (Ø    5247/s) | Fehler 0 | Tamper 0/21291 | RSS 2104 kB
+[16680.1s]     87513930 Runden |    5138/s (Ø    5247/s) | Fehler 0 | Tamper 0/21366 | RSS 2104 kB
+[16740.1s]     87827880 Runden |    5232/s (Ø    5247/s) | Fehler 0 | Tamper 0/21443 | RSS 2104 kB
+[16800.1s]     88143423 Runden |    5259/s (Ø    5247/s) | Fehler 0 | Tamper 0/21520 | RSS 2104 kB
+[16860.1s]     88460973 Runden |    5292/s (Ø    5247/s) | Fehler 0 | Tamper 0/21597 | RSS 2104 kB
+[16920.1s]     88768959 Runden |    5133/s (Ø    5246/s) | Fehler 0 | Tamper 0/21673 | RSS 2104 kB
+[16980.1s]     89084053 Runden |    5252/s (Ø    5246/s) | Fehler 0 | Tamper 0/21750 | RSS 2104 kB
+[17040.1s]     89401129 Runden |    5285/s (Ø    5247/s) | Fehler 0 | Tamper 0/21827 | RSS 2104 kB
+[17100.1s]     89715183 Runden |    5234/s (Ø    5246/s) | Fehler 0 | Tamper 0/21904 | RSS 2104 kB
+[17160.1s]     90027946 Runden |    5213/s (Ø    5246/s) | Fehler 0 | Tamper 0/21980 | RSS 2104 kB
+[17220.1s]     90335758 Runden |    5130/s (Ø    5246/s) | Fehler 0 | Tamper 0/22055 | RSS 2104 kB
+[17280.1s]     90647288 Runden |    5192/s (Ø    5246/s) | Fehler 0 | Tamper 0/22131 | RSS 2104 kB
+[17340.1s]     90959535 Runden |    5204/s (Ø    5246/s) | Fehler 0 | Tamper 0/22207 | RSS 2104 kB
+[17400.1s]     91274693 Runden |    5253/s (Ø    5246/s) | Fehler 0 | Tamper 0/22284 | RSS 2104 kB
+[17460.1s]     91584966 Runden |    5171/s (Ø    5245/s) | Fehler 0 | Tamper 0/22360 | RSS 2104 kB
+[17520.1s]     91894325 Runden |    5156/s (Ø    5245/s) | Fehler 0 | Tamper 0/22436 | RSS 2104 kB
+[17580.1s]     92206907 Runden |    5210/s (Ø    5245/s) | Fehler 0 | Tamper 0/22512 | RSS 2104 kB
+[17640.1s]     92520407 Runden |    5225/s (Ø    5245/s) | Fehler 0 | Tamper 0/22588 | RSS 2104 kB
+[17700.1s]     92831586 Runden |    5186/s (Ø    5245/s) | Fehler 0 | Tamper 0/22664 | RSS 2104 kB
+[17760.1s]     93145078 Runden |    5225/s (Ø    5245/s) | Fehler 0 | Tamper 0/22741 | RSS 2104 kB
+[17820.1s]     93457318 Runden |    5204/s (Ø    5244/s) | Fehler 0 | Tamper 0/22817 | RSS 2104 kB
+[17880.1s]     93773839 Runden |    5275/s (Ø    5245/s) | Fehler 0 | Tamper 0/22895 | RSS 2104 kB
+[17940.1s]     94090286 Runden |    5274/s (Ø    5245/s) | Fehler 0 | Tamper 0/22972 | RSS 2104 kB
+[18000.1s]     94405959 Runden |    5261/s (Ø    5245/s) | Fehler 0 | Tamper 0/23049 | RSS 2104 kB
+[18060.1s]     94723339 Runden |    5290/s (Ø    5245/s) | Fehler 0 | Tamper 0/23126 | RSS 2104 kB
+[18120.1s]     95038688 Runden |    5256/s (Ø    5245/s) | Fehler 0 | Tamper 0/23203 | RSS 2104 kB
+[18180.1s]     95354732 Runden |    5267/s (Ø    5245/s) | Fehler 0 | Tamper 0/23280 | RSS 2104 kB
+[18240.1s]     95671996 Runden |    5288/s (Ø    5245/s) | Fehler 0 | Tamper 0/23358 | RSS 2104 kB
+[18300.1s]     95987682 Runden |    5261/s (Ø    5245/s) | Fehler 0 | Tamper 0/23435 | RSS 2104 kB
+[18360.1s]     96301148 Runden |    5224/s (Ø    5245/s) | Fehler 0 | Tamper 0/23512 | RSS 2104 kB
+[18420.1s]     96607089 Runden |    5099/s (Ø    5245/s) | Fehler 0 | Tamper 0/23586 | RSS 2104 kB
+[18480.1s]     96918215 Runden |    5185/s (Ø    5244/s) | Fehler 0 | Tamper 0/23662 | RSS 2104 kB
+[18540.1s]     97234042 Runden |    5264/s (Ø    5245/s) | Fehler 0 | Tamper 0/23739 | RSS 2104 kB
+[18600.1s]     97548554 Runden |    5242/s (Ø    5245/s) | Fehler 0 | Tamper 0/23816 | RSS 2104 kB
+[18660.1s]     97863786 Runden |    5254/s (Ø    5245/s) | Fehler 0 | Tamper 0/23893 | RSS 2104 kB
+[18720.1s]     98174388 Runden |    5177/s (Ø    5244/s) | Fehler 0 | Tamper 0/23969 | RSS 2104 kB
+[18780.1s]     98491127 Runden |    5279/s (Ø    5244/s) | Fehler 0 | Tamper 0/24046 | RSS 2104 kB
+[18840.1s]     98806860 Runden |    5262/s (Ø    5245/s) | Fehler 0 | Tamper 0/24123 | RSS 2104 kB
+[18900.1s]     99125428 Runden |    5309/s (Ø    5245/s) | Fehler 0 | Tamper 0/24201 | RSS 2104 kB
+[18960.1s]     99443004 Runden |    5293/s (Ø    5245/s) | Fehler 0 | Tamper 0/24279 | RSS 2104 kB
+[19020.1s]     99752408 Runden |    5157/s (Ø    5245/s) | Fehler 0 | Tamper 0/24354 | RSS 2104 kB
+[19080.1s]    100067944 Runden |    5259/s (Ø    5245/s) | Fehler 0 | Tamper 0/24431 | RSS 2104 kB
+[19140.1s]    100381778 Runden |    5231/s (Ø    5245/s) | Fehler 0 | Tamper 0/24508 | RSS 2104 kB
+[19200.1s]    100695979 Runden |    5237/s (Ø    5245/s) | Fehler 0 | Tamper 0/24584 | RSS 2104 kB
+[19260.1s]    101012642 Runden |    5278/s (Ø    5245/s) | Fehler 0 | Tamper 0/24662 | RSS 2104 kB
+[19320.1s]    101325013 Runden |    5206/s (Ø    5245/s) | Fehler 0 | Tamper 0/24738 | RSS 2104 kB
+[19380.1s]    101639465 Runden |    5241/s (Ø    5245/s) | Fehler 0 | Tamper 0/24815 | RSS 2104 kB
+[19440.1s]    101954652 Runden |    5253/s (Ø    5245/s) | Fehler 0 | Tamper 0/24892 | RSS 2104 kB
+[19500.1s]    102268946 Runden |    5238/s (Ø    5245/s) | Fehler 0 | Tamper 0/24969 | RSS 2104 kB
+[19560.1s]    102583012 Runden |    5234/s (Ø    5245/s) | Fehler 0 | Tamper 0/25045 | RSS 2104 kB
+[19620.1s]    102888707 Runden |    5095/s (Ø    5244/s) | Fehler 0 | Tamper 0/25120 | RSS 2104 kB
+[19680.1s]    103201278 Runden |    5210/s (Ø    5244/s) | Fehler 0 | Tamper 0/25196 | RSS 2104 kB
+[19740.1s]    103514520 Runden |    5221/s (Ø    5244/s) | Fehler 0 | Tamper 0/25273 | RSS 2104 kB
+[19800.1s]    103829336 Runden |    5247/s (Ø    5244/s) | Fehler 0 | Tamper 0/25349 | RSS 2104 kB
+[19860.1s]    104140051 Runden |    5179/s (Ø    5244/s) | Fehler 0 | Tamper 0/25425 | RSS 2104 kB
+[19920.1s]    104452370 Runden |    5205/s (Ø    5244/s) | Fehler 0 | Tamper 0/25502 | RSS 2104 kB
+[19980.1s]    104768148 Runden |    5263/s (Ø    5244/s) | Fehler 0 | Tamper 0/25579 | RSS 2104 kB
+[20040.1s]    105085048 Runden |    5282/s (Ø    5244/s) | Fehler 0 | Tamper 0/25656 | RSS 2104 kB
+[20100.1s]    105402077 Runden |    5284/s (Ø    5244/s) | Fehler 0 | Tamper 0/25733 | RSS 2104 kB
+[20160.1s]    105713632 Runden |    5193/s (Ø    5244/s) | Fehler 0 | Tamper 0/25809 | RSS 2104 kB
+[20220.1s]    106018394 Runden |    5079/s (Ø    5243/s) | Fehler 0 | Tamper 0/25884 | RSS 2104 kB
+[20280.1s]    106334505 Runden |    5269/s (Ø    5243/s) | Fehler 0 | Tamper 0/25961 | RSS 2104 kB
+[20340.1s]    106652050 Runden |    5292/s (Ø    5243/s) | Fehler 0 | Tamper 0/26039 | RSS 2104 kB
+[20400.1s]    106968776 Runden |    5279/s (Ø    5244/s) | Fehler 0 | Tamper 0/26116 | RSS 2104 kB
+[20460.1s]    107284261 Runden |    5258/s (Ø    5244/s) | Fehler 0 | Tamper 0/26193 | RSS 2104 kB
+[20520.1s]    107591238 Runden |    5116/s (Ø    5243/s) | Fehler 0 | Tamper 0/26268 | RSS 2104 kB
+[20580.1s]    107904118 Runden |    5215/s (Ø    5243/s) | Fehler 0 | Tamper 0/26344 | RSS 2104 kB
+[20640.1s]    108220611 Runden |    5275/s (Ø    5243/s) | Fehler 0 | Tamper 0/26422 | RSS 2104 kB
+[20700.1s]    108537837 Runden |    5287/s (Ø    5243/s) | Fehler 0 | Tamper 0/26499 | RSS 2104 kB
+[20760.1s]    108855840 Runden |    5300/s (Ø    5244/s) | Fehler 0 | Tamper 0/26577 | RSS 2104 kB
+[20820.1s]    109169103 Runden |    5221/s (Ø    5243/s) | Fehler 0 | Tamper 0/26653 | RSS 2104 kB
+[20880.1s]    109482818 Runden |    5229/s (Ø    5243/s) | Fehler 0 | Tamper 0/26730 | RSS 2104 kB
+[20940.1s]    109796571 Runden |    5229/s (Ø    5243/s) | Fehler 0 | Tamper 0/26806 | RSS 2104 kB
+[21000.1s]    110113323 Runden |    5279/s (Ø    5243/s) | Fehler 0 | Tamper 0/26884 | RSS 2104 kB
+[21060.1s]    110433022 Runden |    5328/s (Ø    5244/s) | Fehler 0 | Tamper 0/26962 | RSS 2104 kB
+[21120.1s]    110742948 Runden |    5165/s (Ø    5243/s) | Fehler 0 | Tamper 0/27037 | RSS 2104 kB
+[21180.1s]    111057443 Runden |    5242/s (Ø    5243/s) | Fehler 0 | Tamper 0/27114 | RSS 2104 kB
+[21240.1s]    111373375 Runden |    5266/s (Ø    5244/s) | Fehler 0 | Tamper 0/27191 | RSS 1908 kB
+[21300.1s]    111689115 Runden |    5262/s (Ø    5244/s) | Fehler 0 | Tamper 0/27268 | RSS 1908 kB
+[21360.1s]    112003689 Runden |    5243/s (Ø    5244/s) | Fehler 0 | Tamper 0/27345 | RSS 1908 kB
+[21420.1s]    112308497 Runden |    5080/s (Ø    5243/s) | Fehler 0 | Tamper 0/27420 | RSS 1908 kB
+[21480.1s]    112623943 Runden |    5257/s (Ø    5243/s) | Fehler 0 | Tamper 0/27497 | RSS 1908 kB
+[21540.1s]    112939693 Runden |    5262/s (Ø    5243/s) | Fehler 0 | Tamper 0/27574 | RSS 1908 kB
+
+═══════════════════════════════════════════════════════
+  SOAK-TEST ERGEBNIS
+═══════════════════════════════════════════════════════
+Laufzeit:          21572.0 s (5.99 h)
+Runden:            113106844
+Roundtrip-Fehler:  0
+Tamper-Checks:     27614 (davon durchgelassen: 0)
+Durchsatz:         5243 Runden/s
+Pro Runde:         0.191 ms
+VmRSS Start/Ende:  2104 / 1908 kB (Peak 2104)
+Speicher-Drift:    -196 kB
+═══════════════════════════════════════════════════════
+✅ SOAK-TEST BESTANDEN — keine Fehler, kein Leck-Verdacht
