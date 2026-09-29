@@ -41,7 +41,7 @@ impl zeroize::Zeroize for FieldElement {
 /// in range [0, q). No data-dependent branches; the only conditional is a
 /// single constant-time subtraction at the end.
 #[inline(always)]
-fn montgomery_reduce(t: u32) -> u16 {
+pub(crate) fn montgomery_reduce(t: u32) -> u16 {
     // m = (t mod R) * Q_INV_NEG mod R
     let m = (t.wrapping_mul(Q_INV_NEG)) & 0xFFFF;
     let mq = m * Q;
@@ -65,12 +65,48 @@ pub(crate) fn ct_reduce_once(a: u32) -> u16 {
     (diff.wrapping_add(mask & Q)) as u16
 }
 
+/// Kanonische Reduktion eines **rohen** 16-Bit-Wertes nach [0, q) — zweigfrei,
+/// total und ohne Panik.
+///
+/// Solche Werte kommen aus ungeprüften Bytes (Chiffretext, öffentlicher
+/// Schlüssel): `v` darf also beliebig groß sein, bis 65535. Weil
+/// `ct_reduce_once` pro Durchlauf höchstens einmal q abzieht, genügen
+/// `65536 / q + 1` Durchläufe; bei q = 12289 sind das sechs, und danach ist der
+/// Rest garantiert kleiner als q. Die Schleifengrenze ist eine Konstante, der
+/// Optimierer rollt sie auf — es bleibt eine feste Folge von Maskenoperationen.
 #[inline(always)]
-fn montgomery_mul_raw(a: u16, b: u16) -> u16 {
+pub fn reduziere_kanonisch(v: u16) -> u16 {
+    let mut x = v as u32;
+    let durchlaeufe = (65536 / Q) + 1;
+    let mut i = 0;
+    while i < durchlaeufe {
+        x = ct_reduce_once(x) as u32;
+        i += 1;
+    }
+    x as u16
+}
+
+#[inline(always)]
+pub(crate) fn montgomery_mul_raw(a: u16, b: u16) -> u16 {
     montgomery_reduce((a as u32) * (b as u32))
 }
 
 impl FieldElement {
+    /// Roher Montgomery-Wert — nur crate-intern, wird von der
+    /// Fault-Injection (Feature `fia-hooks`) gebraucht, um einzelne Bits zu kippen.
+    #[inline(always)]
+    #[cfg_attr(not(feature = "fia-hooks"), allow(dead_code))]
+    pub(crate) fn roh(&self) -> u16 {
+        self.0
+    }
+
+    /// Setzt den rohen Montgomery-Wert (Gegenstueck zu [`FieldElement::roh`]).
+    #[inline(always)]
+    #[cfg_attr(not(feature = "fia-hooks"), allow(dead_code))]
+    pub(crate) fn setze_roh(&mut self, v: u16) {
+        self.0 = v;
+    }
+
     /// The additive identity (0 in Montgomery form is 0).
     pub const fn zero() -> Self {
         FieldElement(0)
@@ -81,10 +117,16 @@ impl FieldElement {
         FieldElement(4091) // R mod q
     }
 
-    /// Lift a plain residue in [0, q) into Montgomery form.
+    /// Lift a residue into Montgomery form.
+    ///
+    /// **Total:** Werte ≥ q werden zuerst kanonisch reduziert
+    /// ([`reduziere_kanonisch`]), statt sich auf eine Zusicherung zu verlassen.
+    /// Damit gibt es keinen Eingabewert — auch keinen aus ungeprüften
+    /// Netzbytes —, der in Debug- oder Fuzz-Builds panikt, und Debug- und
+    /// Release-Build haben dieselbe Semantik: `from_plain(v) == v mod q`.
+    #[inline(always)]
     pub fn from_plain(a: u16) -> Self {
-        debug_assert!((a as u32) < Q);
-        FieldElement(montgomery_mul_raw(a, R2_MOD_Q as u16))
+        FieldElement(montgomery_mul_raw(reduziere_kanonisch(a), R2_MOD_Q as u16))
     }
 
     /// Bring a Montgomery-form element back to a plain residue in [0, q).

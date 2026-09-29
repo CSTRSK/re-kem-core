@@ -69,3 +69,9 @@ pub use ntt::{Poly, N};
 pub use params::{Params, ACTIVE, LEVEL5_1024, NEWHOPE_512};
 pub use sampling::{cbd_sample, expand_a};
 pub use version::{Algorithm, Envelope, VersionError};
+
+#[cfg(feature = "fia-hooks")]
+pub mod fia;
+
+#[cfg(kani)]
+mod kani_proofs;

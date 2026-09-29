@@ -183,6 +183,12 @@ impl<const N: usize, const PK: usize, const SK: usize, const CT: usize> Kem
         }
     }
 
+    /// Fresh key pair from the operating system's randomness.
+    ///
+    /// Without the `rng` feature there is no system randomness source: this
+    /// returns [`KemError::NotEnabled`]. The deterministic `*_derand` entry
+    /// points of [`crate::kem::ReKem`] stay available — the example below shows
+    /// the no_std-friendly path.
     fn keygen(&self) -> Result<KeyPair, KemError> {
         #[cfg(feature = "rng")]
         {
@@ -215,7 +221,6 @@ impl<const N: usize, const PK: usize, const SK: usize, const CT: usize> Kem
         }
         #[cfg(not(feature = "rng"))]
         {
-            let _ = pk;
             Err(KemError::NotEnabled(self.algorithm))
         }
     }

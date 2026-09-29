@@ -13,6 +13,9 @@ getrandom = { version = "0.2", optional = true }
 
 [features]
 default = ["std", "rng"]
+# Nur fuer die Fault-Injection-Tests: haengt einen Stoerhaken in den
+# Entkapselungs-Zwischenvektor. Im Normalbau nicht enthalten.
+fia-hooks = [ ]
 std = []
 rng = ["dep:getrandom", "getrandom/std"]
 
