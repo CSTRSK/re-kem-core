@@ -6,8 +6,11 @@
 
 ![Rust](https://img.shields.io/badge/Rust-1.98-orange?logo=rust)
 ![License](https://img.shields.io/badge/License-AGPL--3.0-blue)
-![Tests](https://img.shields.io/badge/tests-17%2F17-green)
+![Tests](https://img.shields.io/badge/tests-29%2F29-green)
 ![Cross--validated](https://img.shields.io/badge/cross--validation-1000%2F1000-brightgreen)
+![Kani](https://img.shields.io/badge/Kani-7%2F7%20invariants-success)
+![Valgrind](https://img.shields.io/badge/valgrind-0%20errors-brightgreen)
+![Fuzzing](https://img.shields.io/badge/fuzzing-109k%20runs%2C%200%20deviations-informational)
 
 A full, constant-time Rust implementation of the post-quantum
 [RE-KEM](https://github.com/CSTRSK/RE-KEM) — verified **bit-identical** to the
@@ -103,9 +106,18 @@ let (ct, ss) = kem.encaps_derand(&pk, &message);
 ### `no_std`
 
 The crate compiles without the Rust standard library (`core` + `alloc` +
-`subtle` + `sha3` + `zeroize`), so it can target embedded and bare-metal platforms. Disable
-default features; the `rng` feature (which pulls in `getrandom`) is optional —
-with it off, only the deterministic `*_derand` APIs are available.
+`subtle` + `sha3` + `zeroize`), so it can target embedded and bare-metal platforms.
+Disable default features; the `rng` feature (which pulls in `getrandom`) is optional.
+
+```bash
+cargo build --no-default-features              # no_std, deterministic APIs only
+cargo build --no-default-features --features rng
+```
+
+Without `rng` there is no system randomness source: the deterministic
+`ReKem::keygen_derand` / `encaps_derand` entry points stay available, while the
+`api` convenience layer (`Kem::keygen` / `Kem::encaps`) returns
+`KemError::NotEnabled` instead of silently failing.
 
 ## Cross-validation against the Python reference
 
@@ -243,11 +255,11 @@ in both. Raw logs and the analyzer live in `soak.log` / `soak2.log` and
 
 ```bash
 cargo build --release
-cargo test          # 17 unit tests, all green
+cargo test          # 29 unit tests, all green (debug profile included)
 ```
 
 ```
-running 17 tests
+running 29 tests
 test field::tests::r_mod_q_constant_is_4091_not_4095 ... ok
 test ntt::tests::ntt_multiplication_matches_naive ... ok
 test ntt::tests::multiplication_with_negacyclic_wrap ... ok
@@ -257,6 +269,138 @@ test kem::tests::tampered_ciphertext_gives_different_secret ... ok
 ...
 test result: ok. 17 passed; 0 failed
 ```
+
+## Verification & hardening audit (September 2026)
+
+Four independent methods, all driven from one entry point with a clean CI exit
+code (`0` = green, non-zero = finding):
+
+```bash
+FUZZ_SEKUNDEN=180 bash scripts/run_harnesses.sh
+```
+
+### 1. Formal verification with Kani — 7/7 invariants over the full domain
+
+Nine harnesses live in `src/kani_proofs.rs`, documented in
+[`KANI-BEWEISE.md`](KANI-BEWEISE.md). Seven of them quantify over the **entire**
+input domain (symbolically, not by enumeration):
+
+| # | Harness | Statement | Result | Time |
+|---|---------|-----------|--------|------|
+| 1 | `verify_ct_reduce_once` | for all a ∈ [0, 2q): result < q and congruent to a | ✅ | 0.06 s |
+| 2 | `verify_montgomery_reduce` | for all t < q·R: no u32 overflow, t + m·q divisible by R, result < q, **r·R ≡ t (mod q)** | ✅ | 464 s |
+| 3 | `verify_from_plain_to_plain_roundtrip` | for all a < q: `to_plain(from_plain(a)) == a` | ✅ | 2.3 s |
+| 4 | `verify_constants` | `R mod q = 4091` (not 4095), `R² = 10952`, `q⁻¹ mod R = 53249`, `one()`, `zero()` | ✅ | 0.3 s |
+| 5 | `verify_bit_reversal_index_safe` | the bit-reversal permutation never leaves the array | ✅ | 0.1 s |
+| 6 | `verify_butterfly_bounds` | no overflow; sum/difference < 2q, canonical after reduction | ✅ | 0.4 s |
+| 7 | `verify_ntt_context_tables_in_range` | `NttContext::new()` completes without panic, ψ < q | ✅ | 47 s |
+
+```bash
+cargo kani --harness verify_montgomery_reduce     # ~8 minutes
+```
+
+**Where the solver stops — and why it is not the implementation.** The direct
+proof of multiplication correctness for two symbolic operands (and of `add`/`sub`)
+exceeds a 900 s budget, and it still does when the Montgomery reduction is
+*stubbed* with the specification proven in #2. The bottleneck is the
+specification itself: `(r · R) mod q == t mod q` with **symbolic** `r` is a
+nonlinear congruence — a product of two unknowns modulo a prime — which is the
+expensive part for the SAT core. Counting reduction steps barely matters.
+Restricted to `a, b < 256` the same statements complete in 27.8 s and 15.2 s
+(`verify_multiplication_bounded_8bit`, `verify_add_sub_bounded_8bit`), and the
+full-domain behaviour of multiplication is covered by the differential fuzzer
+below. Stub-based proofs are invoked with `cargo kani -Z stubbing`.
+
+### 2. Constant-time audit under Valgrind — 0 errors
+
+`tests/ct_valgrind.rs` implements the ct-grind technique with in-line assembly
+client requests (`tests/common/vg.rs`, no C dependency): secret buffers are
+marked *undefined*, and memcheck reports every conditional jump and every memory
+address that depends on them — the two leak shapes a compiler can introduce.
+
+```bash
+valgrind --tool=memcheck --error-exitcode=99 --track-origins=yes \
+  $(cargo test --release --test ct_valgrind --no-run --message-format=json | …)
+```
+
+Result: **0 errors from 0 contexts** across key generation, encapsulation,
+decapsulation, forward and inverse NTT, Montgomery multiplication and the
+implicit-rejection path.
+
+Two methodological rules are documented at the top of the test, because a naive
+run measures itself:
+
+* **Poison only genuine secrets.** `seed_a` derives the *public* matrix A; its
+  rejection-sampling loop may — and must — branch on those bytes. Poisoning it
+  produced 3,213 reports from 7 contexts in the first attempt, all of them false
+  positives, plus comparisons inside our own test code.
+* **Never branch on poisoned data in the test.** Outputs are consumed via
+  `black_box` and re-marked *defined* before any assertion.
+
+The audit's sensitivity is checked by `tests/ct_control.rs`, which contains three
+deliberate leaks. Two of them (index derived from a secret, product used as an
+index) are reported by memcheck; the pure branch control is not, because LLVM
+compiles that pattern into branchless arithmetic — desirable for the library,
+a documented gap for the control itself.
+
+### 3. Differential fuzzing — 70k+ iterations, no deviation
+
+`fuzz/fuzz_targets/ntt_algebra.rs` checks
+`iNTT(NTT(a) ⊙ NTT(b)) == a · b mod (X^n + 1, q)` against a naive schoolbook
+negacyclic convolution over all 512 coefficients, with a boundary-value bias
+(0, 1, q−1, (q−1)/2) and a seed corpus.
+
+```
+Done 109848 runs in 181 second(s)     stat::average_exec_per_sec: 598
+stat::new_units_added: 279            coverage: 89/221
+```
+
+No mismatch, no crash. The **first** run did find a crash — a reachable
+`debug_assert!` on untrusted wire data, fixed below.
+
+### 4. Fault injection — deterministic two-state behaviour
+
+`tests/fia.rs` injects single-bit faults, in two models: in the inputs (secret
+key, ciphertext) and — with the `fia-hooks` feature — in the intermediate vector
+`w = v − u·s` inside the decryption.
+
+| Model | Scope | Result |
+|-------|-------|--------|
+| Secret-key bit flips | 256 sampled positions | 253 landed in rejection, 3 had no effect |
+| Ciphertext bit flips | all 2,048 byte positions | 2,048 distinct rejection secrets — no constant output |
+| Intermediate bit flips | 512 positions, random bit | 442 no effect, **70 in rejection**, **exactly 2 distinct secrets** |
+
+The last row is the point: the ciphertext is unchanged, so a rejection secret
+depends only on `z` and `H(ct)` — every effectual fault must yield the *same*
+secret. Observing exactly two outcomes (honest secret, one rejection secret)
+shows that no third output path exists through which partial information could
+leak.
+
+### Robustness fix: untrusted wire data in `decode_poly`
+
+`decode_poly` passed raw ciphertext bytes into `FieldElement::from_plain`, whose
+`debug_assert!` aborted debug and fuzz builds whenever a coefficient was ≥ q —
+an attacker-reachable panic path (found by the fuzzer within seconds, artefact
+preserved). It is fixed with an explicit, branchless canonical reduction
+(`reduziere_kanonisch`: ⌈65536/q⌉ masked conditional subtractions) applied in
+`decode_poly`, and `from_plain` itself is now total as well. Debug and release
+builds have **identical semantics** (`from_plain(v) == v mod q`), and no input
+value can panic.
+
+`tests/decode_untrusted.rs` proves this exhaustively over all 65,536 raw 16-bit
+values and is executed in the **debug** profile — the one where the assertion
+used to fire.
+
+### What this audit does not prove
+
+* Valgrind checks **data dependencies, not time**. Cache and branch-predictor
+  leaks are invisible to it; that part stays with the dudect-style measurement
+  in `examples/timing.rs`.
+* Fuzzing is evidence for the exercised input classes, not a proof.
+* Fault injection here is **software-emulated** — one bit in an intermediate
+  vector, without physical timing or glitch modelling.
+* Kani verifies values, ranges and indices, not timing. It is not a
+  side-channel tool.
 
 ## Status / Roadmap
 
@@ -272,6 +416,11 @@ test result: ok. 17 passed; 0 failed
 - [x] 14-hour soak test, chained (263.9M rounds, 64,430 tamper checks, 0 failures, no leaks)
 - [x] Zeroization of secret intermediates on drop
 - [x] dudect-style timing analysis (no leak detected, 100k measurements)
+- [x] Kani proofs: 7/7 invariants over the full domain (9 harnesses, `src/kani_proofs.rs`)
+- [x] ct-grind audit under Valgrind memcheck: 0 errors, with positive controls
+- [x] Differential fuzzing against a naive negacyclic convolution (cargo-fuzz)
+- [x] Fault-injection suite: deterministic two-state behaviour (legit / implicit rejection)
+- [x] Untrusted wire data: `decode_poly` reduces canonically, no panic in any build
 
 ## Side-channel hardening
 
@@ -425,3 +574,10 @@ construction but have not been machine-verified against timing leakage.
 ---
 
 **CSTRSK.DE · COPYRIGHT 2008–2026**
+
+---
+
+## Detailed lab notes (German)
+
+* [`HARNESSES.md`](HARNESSES.md) — how to run each of the four harnesses, raw numbers, findings, limits
+* [`KANI-BEWEISE.md`](KANI-BEWEISE.md) — the nine Kani harnesses, invocation, and where the solver gives up

@@ -158,7 +158,11 @@ fn pke_encrypt<const N: usize, const CT: usize>(
 fn pke_decrypt<const N: usize>(ctx: &NttContext<N>, s: &Poly<N>, ct: &[u8]) -> [u8; SEED_LEN] {
     let u = decode_poly::<N>(&ct[..2 * N]);
     let v = decode_poly::<N>(&ct[2 * N..]);
-    let w = v.sub(&ctx.mul(&u, s));
+    let mut w = v.sub(&ctx.mul(&u, s));
+    // Fault-Injection fuer Tests: kippt genau ein Bit im Zwischenvektor.
+    // Nur mit Feature `fia-hooks` kompiliert, sonst ist diese Zeile weg.
+    #[cfg(feature = "fia-hooks")]
+    crate::fia::anwenden::<N>(&mut w);
     poly_to_msg::<N>(&w)
 }
 

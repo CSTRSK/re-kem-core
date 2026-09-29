@@ -1,0 +1,28 @@
+name: Härtung
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  haertung:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rust nightly (für cargo-fuzz)
+        uses: dtolnay/rust-toolchain@nightly
+
+      - name: Valgrind und C++-Toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y valgrind g++
+
+      - name: cargo-fuzz
+        run: cargo install cargo-fuzz
+
+      - name: Alle vier Harnesses
+        env:
+          FUZZ_SEKUNDEN: "120"
+        run: bash scripts/run_harnesses.sh

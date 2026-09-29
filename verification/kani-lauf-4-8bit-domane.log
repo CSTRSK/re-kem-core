@@ -1,0 +1,12 @@
+########## verify_multiplication_bounded_8bit ##########
+ ** 0 of 22 failed
+VERIFICATION:- SUCCESSFUL
+Verification Time: 27.797304s
+Complete - 1 successfully verified harnesses, 0 failures, 1 total.
+
+########## verify_add_sub_bounded_8bit ##########
+ ** 0 of 17 failed
+VERIFICATION:- SUCCESSFUL
+Verification Time: 15.1914835s
+Complete - 1 successfully verified harnesses, 0 failures, 1 total.
+

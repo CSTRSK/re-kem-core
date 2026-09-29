@@ -138,13 +138,31 @@ pub fn encode_poly<const N: usize>(p: &Poly<N>, out: &mut [u8]) {
     }
 }
 
-/// Inverse of [`encode_poly`]. Reads `2*N` bytes.
+/// Inverse of [`encode_poly`] for **untrusted** data. Reads `2*N` bytes.
+///
+/// Die Bytes kommen aus dem Netz (Chiffretext, eingebetteter öffentlicher
+/// Schlüssel) und sind damit angreifbar. Jeder 16-Bit-Wert wird deshalb
+/// **explizit und zweigfrei** nach [0, q) reduziert, bevor er in die
+/// Montgomery-Form gehoben wird:
+///
+/// * auf dem Wertpfad gibt es keine Zusicherung mehr — Debug- und
+///   Release-Build verhalten sich identisch und paniken nie,
+/// * `decode_poly(bytes)` ist wohldefiniert für beliebige Bytes, das Ergebnis
+///   ist `v mod q` je Koeffizient.
+///
+/// (Vorher reichte `decode_poly` den Rohwert an `FieldElement::from_plain`
+/// durch, das in Debug-Builds abbrach — ein Absturzpfad über angreifbare
+/// Daten, den der Fuzzer sofort gefunden hat.)
+///
+/// Die Längenprüfung bleibt: eine zu kurze Scheibe ist ein Programmierfehler,
+/// kein angreifbarer Wert.
 pub fn decode_poly<const N: usize>(data: &[u8]) -> Poly<N> {
     debug_assert!(data.len() >= 2 * N, "decode_poly needs 2N bytes");
     let mut out = Poly::<N>::zero();
     for i in 0..N {
-        let v = (data[2 * i] as u16) | ((data[2 * i + 1] as u16) << 8);
-        out.coeffs[i] = FieldElement::from_plain(v);
+        let roh = (data[2 * i] as u16) | ((data[2 * i + 1] as u16) << 8);
+        let kanonisch = crate::field::reduziere_kanonisch(roh);
+        out.coeffs[i] = FieldElement::from_plain(kanonisch);
     }
     out
 }
