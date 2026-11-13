@@ -110,6 +110,15 @@ if [ "$OHNE_VALGRIND" != "1" ]; then
     fi
 fi
 
+kopf "7) Hybride (RE-KEM-512+X25519, ML-KEM-768+X25519) — Debug UND Release"
+if cargo test --all-features --test hybrid 2>&1 | tail -3 \
+   && cargo test --release --all-features --test hybrid 2>&1 | tail -3
+then
+    ok "hybrid (Debug + Release)"
+else
+    fehler_melden "hybrid"
+fi
+
 kopf "2) Differential-Fuzzing NTT gegen naive Faltung (${FUZZ_SEKUNDEN}s)"
 if ! command -v cargo-fuzz >/dev/null; then
     fehler_melden "cargo-fuzz fehlt (cargo install cargo-fuzz)"
