@@ -53,6 +53,14 @@ else
     fehler_melden "decode_untrusted (Debug)"
 fi
 
+kopf "5) Eigenschafts- und Spezifikationstests — Debug- UND Release-Profil"
+if cargo test --test eigenschaften 2>&1 | tail -3 && cargo test --release --test eigenschaften 2>&1 | tail -3; then
+    ok "eigenschaften (Debug + Release)"; else fehler_melden "eigenschaften"; fi
+
+kopf "6) Known-Answer-Tests gegen die Python-Referenz (py.json, py-1024.json, vectors.json)"
+if KAT_RUNDEN=alle cargo test --release --test kat 2>&1 | tail -3; then
+    ok "kat (10 000 Runden n=512, 1 000 Runden n=1024)"; else fehler_melden "kat"; fi
+
 kopf "3) IND-CCA2 und Implicit Rejection"
 if cargo test --release --test ind_cca2 2>&1 | tail -3; then ok "ind_cca2"; else fehler_melden "ind_cca2"; fi
 

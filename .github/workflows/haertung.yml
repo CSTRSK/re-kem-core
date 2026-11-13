@@ -26,3 +26,27 @@ jobs:
         env:
           FUZZ_SEKUNDEN: "120"
         run: bash scripts/run_harnesses.sh
+
+  # Schnelle Rückmeldung auf stabilem Rust: alle Tests, Debug UND Release.
+  # Debug ist Absicht (debug_assert! greift dort), Release prüft die ausgelieferte Form.
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Tests (Debug)
+        run: cargo test --no-fail-fast
+
+      - name: Tests (Release)
+        run: cargo test --release --no-fail-fast
+
+      - name: Known-Answer-Tests, alle Runden (Release)
+        env:
+          KAT_RUNDEN: alle
+        run: cargo test --release --test kat
+
+      - name: no_std-Bau (ohne Standardfeatures)
+        run: cargo build --no-default-features

@@ -1,8 +1,9 @@
 # Härtungs-Harnesses für `re-kem-core`
 
-Vier automatisierte Prüfungen: Constant-Time-Audit (Valgrind), Differential-Fuzzing
-(cargo-fuzz/libFuzzer), IND-CCA2 mit Implicit Rejection, und Fault-Injection in der
-Entkapselung. Alle laufen über **einen** Einstieg mit sauberem Exitcode:
+Sechs automatisierte Prüfungen: Constant-Time-Audit (Valgrind), Differential-Fuzzing
+(cargo-fuzz/libFuzzer), IND-CCA2 mit Implicit Rejection, Fault-Injection in der
+Entkapselung, Eigenschafts-/Spezifikationstests und Known-Answer-Tests gegen die
+Python-Referenz. Alle laufen über **einen** Einstieg mit sauberem Exitcode:
 
 ```bash
 FUZZ_SEKUNDEN=60 bash scripts/run_harnesses.sh     # 0 = grün, >0 = Befund
@@ -14,6 +15,8 @@ FUZZ_SEKUNDEN=60 bash scripts/run_harnesses.sh     # 0 = grün, >0 = Befund
 | 2 | Differential-Fuzzing NTT ↔ naive Faltung | `fuzz/fuzz_targets/ntt_algebra.rs` | cargo-fuzz (libFuzzer + ASan) |
 | 3 | IND-CCA2 und Implicit Rejection | `tests/ind_cca2.rs` | cargo test |
 | 4 | Fault-Injection (äußere und innere Störung) | `tests/fia.rs`, `src/fia.rs` (Feature `fia-hooks`) | cargo test |
+| 5 | Eigenschafts- und Spezifikationstests | `tests/eigenschaften.rs` | cargo test (Debug **und** Release) |
+| 6 | Known-Answer-Tests gegen `rekem.py` | `tests/kat.rs`, `py.json`, `py-1024.json`, `vectors.json` | cargo test |
 
 Voraussetzungen: `dnf install valgrind valgrind-devel gcc-c++`, `cargo install cargo-fuzz`,
 `rustup toolchain install nightly`.
@@ -42,6 +45,10 @@ separat in `/root/invntt-kani` (inkl. Kani-Beweisen und drei belegten Defekten).
 | 3 IND-CCA2 | 7/7 Tests grün (200 Bitfehler-Stichproben, 2048 v-Positionen, Zufalls-Chiffretexte, manipulierter sk) |
 | 4 FIA äußere Störung | 256 sk-Fehler: 253 in der Ablehnung, 3 ohne Wirkung; 2048 ct-Positionen: **2048 verschiedene Ablehnungs-Secrets** |
 | 4 FIA innere Störung | 512 Zwischenvektor-Fehler: 442 ohne Wirkung, **70 in der Ablehnung**, **genau 2 verschiedene Secrets** |
+| 5 Eigenschaften | 26/26 Tests grün, Debug und Release; Mutationstest: 5 von 5 eingebauten Fehlern erkannt (Datum 13.11.2026) |
+| 6 KAT n=512 | **10 000 Runden**, SHA-256(pk), SHA-256(ct) und Shared Secret bit-identisch zur Python-Referenz |
+| 6 KAT n=1024 | **1 000 Runden**, bit-identisch zur Python-Referenz (`py-1024.json`) |
+| 6 KAT Körper | `vectors.json`: add/sub/mul gegen naive Rechnung, Datei und Implementierung beide geprüft |
 
 Die letzte Zeile ist die wichtigste Aussage der FIA-Suite: der Chiffretext bleibt bei
 einer inneren Störung unverändert, das Ablehnungs-Secret hängt also nur an `z` und `h(ct)`.
@@ -103,6 +110,35 @@ aber eine Lücke: die Empfindlichkeit des Audits für die *Sprung*-Form ist mit 
 Muster nicht belegt. Wer sie belegen will, braucht einen Zweig, den der Optimierer
 nicht entfernen kann (etwa einen Aufruf, den er nicht einordnen kann).
 
+## Harness 5 und 6 — was sie zusätzlich leisten
+
+**5, Eigenschaften** (`tests/eigenschaften.rs`): Ringaxiome der NTT in n = 512 und 1024,
+Körperarithmetik erschöpfend über alle Reste, Sampling gegen eine unabhängig aus der
+Spezifikation nachgebaute Referenz (plus Statistik), und das KEM selbst gegen die
+dokumentierten Hashes: Schlüssel-Layout, Chiffretext `enc(u) ‖ enc(v)`, Shared Secret
+`SHAKE-256(k̄ ‖ SHA3-256(ct))` und das Ablehnungs-Secret `SHAKE-256(z ‖ SHA3-256(ct))`.
+Dazu Sensitivität auf jedes Seed-, Nachrichten- und pk-Bit, Totalität (kein Panik bei
+Nullen, 0xFF, Grenzwerten um q) und die Trait-/Registry-Schicht. Der Lauf im
+**Debug**-Profil ist Absicht — dort greifen `debug_assert!` (siehe Befund 1).
+
+**6, Known-Answer-Tests** (`tests/kat.rs`): die Vektordateien kommen von der
+**Python-Seite** (`tools/cross_kem_python.py`), nicht aus diesem Crate. Der Test rechnet
+jede Runde in Rust nach und vergleicht. Er fängt auch Abweichungen, die nur bei etwa
+einem von 65 536 Wörtern auftreten (Rand der Rejection-Sampling-Grenze) — im
+Mutationstest `val < limit` → `val <= limit` schlägt `kat` an, `eigenschaften` nicht.
+Genau dafür gibt es beide Harnesses.
+
+Umfang steuern: `KAT_RUNDEN=alle` (Standard im Release-Profil: alle; im Debug-Profil 200
+bzw. 50), oder `KAT_RUNDEN=<zahl>`. `scripts/run_harnesses.sh` fährt immer alle Runden.
+
+Vektoren neu erzeugen — **nur** bei bewusster Änderung des Wire-Formats:
+
+```bash
+git clone https://github.com/CSTRSK/RE-KEM /tmp/RE-KEM
+PYTHONPATH=/tmp/RE-KEM python3 tools/cross_kem_python.py 10000 512  > py.json
+PYTHONPATH=/tmp/RE-KEM python3 tools/cross_kem_python.py  1000 1024 > py-1024.json
+```
+
 ## Grenzen
 
 * Valgrind prüft **Datenabhängigkeit**, nicht Zeit: ein Leck durch Cache-Verhalten oder
@@ -116,3 +152,9 @@ nicht entfernen kann (etwa einen Aufruf, den er nicht einordnen kann).
 * `tests/../src/fia.rs` und die zwei `pub(crate)`-Zugriffe in `field.rs` (`roh`,
   `setze_roh`) sind ausschließlich für die Tests da. Das ausgelieferte Verhalten ist
   unverändert; im Normalbau kompiliert das Modul nicht mit.
+* Die Referenzen in Harness 5 sind aus **derselben Spezifikation** abgeleitet wie der
+  Code. Ein Fehler in der Spezifikation selbst fiele dort nicht auf; Harness 6 sichert
+  gegen `rekem.py` ab, ist aber nur so unabhängig wie dessen Implementierung.
+* Harness 6 deckt nur die Seed-Ableitung `re-kem-cross-<i>-<label>` ab. Eingaben, die
+  diese Ableitung nie erzeugt (manipulierte Chiffretexte, Grenzwerte um q, ungültige
+  Schlüssel), prüfen Harness 3 und 5.
