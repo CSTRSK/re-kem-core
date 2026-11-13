@@ -10,6 +10,9 @@ subtle = { version = "2", default-features = false }
 sha3 = { version = "0.10", default-features = false }
 zeroize = { version = "1", default-features = false }
 getrandom = { version = "0.2", optional = true }
+# Hybride (experimentell), beide Features standardmaessig AUS.
+x25519-dalek = { version = "2.0.1", default-features = false, features = ["static_secrets", "zeroize"], optional = true }
+ml-kem = { version = "0.3.4", default-features = false, features = ["alloc"], optional = true }
 
 [features]
 default = ["std", "rng"]
@@ -18,6 +21,9 @@ default = ["std", "rng"]
 fia-hooks = [ ]
 std = []
 rng = ["dep:getrandom", "getrandom/std"]
+# Hybrid-KEMs: RE-KEM-512 + X25519 / ML-KEM-768 + X25519. Experimentell.
+hybrid-rekem-x25519 = ["dep:x25519-dalek"]
+hybrid-mlkem-x25519 = ["dep:x25519-dalek", "dep:ml-kem"]
 
 [dev-dependencies]
 hex = "0.4"

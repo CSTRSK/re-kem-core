@@ -43,6 +43,12 @@ jobs:
       - name: Tests (Release)
         run: cargo test --release --no-fail-fast
 
+      - name: Hybride (Debug)
+        run: cargo test --all-features --test hybrid
+
+      - name: Hybride (Release)
+        run: cargo test --release --all-features --test hybrid
+
       - name: Known-Answer-Tests, alle Runden (Release)
         env:
           KAT_RUNDEN: alle

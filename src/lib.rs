@@ -60,6 +60,9 @@ pub mod params;
 pub mod sampling;
 pub mod version;
 
+#[cfg(any(feature = "hybrid-rekem-x25519", feature = "hybrid-mlkem-x25519"))]
+pub mod hybrid;
+
 pub use field::{FieldElement, Q};
 pub use kem::{
     KemGeneric, ReKem, ReKem1024, CT_LEN, CT_LEN_1024, PK_LEN, PK_LEN_1024, SEED_LEN, SK_LEN,

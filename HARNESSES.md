@@ -139,6 +139,53 @@ PYTHONPATH=/tmp/RE-KEM python3 tools/cross_kem_python.py 10000 512  > py.json
 PYTHONPATH=/tmp/RE-KEM python3 tools/cross_kem_python.py  1000 1024 > py-1024.json
 ```
 
+## Harness 7 — Hybride
+
+`tests/hybrid.rs` prüft beide Hybrid-KEMs. Läuft nur mit aktivem Feature, je
+Algorithmus dieselben Prüfungen über eine gemeinsame Hilfsschicht.
+
+| Nr. | Prüfung |
+|---|---|
+| hyb01 | Größen exakt wie in der Spezifikation |
+| hyb02 | Rundreise, 200 Läufe (Debug 20) |
+| hyb03 | Determinismus: gleiche Seeds gleiche Ausgabe, andere Seeds andere |
+| hyb04 | Kombinierer gegen Python-Referenz (`hashlib.sha3_256`), 20 Vektoren |
+| hyb05 | X25519 gegen RFC-7748-Vektoren (5.2) und das DH-Beispiel (6.1), wörtlich aus dem RFC |
+| hyb06 | Manipulation im `pq_ct` — jedes geprüfte Bit ändert das Secret |
+| hyb07 | Manipulation im `x_ct` — alle 256 Bit |
+| hyb08 | Mix-and-Match: `pq_ct` aus Lauf 1 mit `x_ct` aus Lauf 2 |
+| hyb09 | Schlüsselbindung: manipulierter `x_pk` ergibt ein anderes Secret |
+| hyb10 | Punkt kleiner Ordnung: `encaps` → `InvalidPublicKey`, `decaps` deterministisch |
+| hyb11 | Längenfehler für pk, sk, ct — `BadLength`, kein Panik |
+| hyb12 | Totalität: Nullen, 0xFF, Zufall als sk/ct |
+| hyb13 | Registry: beide Hybride auffindbar, `is_offered` passt zur Registry |
+| hyb14 | Keine Vermischung zwischen den Hybriden — `BadLength` |
+| hyb15 | ML-KEM-768-Größen gegen das Crate (1184 / 2400 / 1088) |
+
+```bash
+cargo test --features hybrid-rekem-x25519 --test hybrid    # 15 Tests
+cargo test --features hybrid-mlkem-x25519 --test hybrid    # 16 Tests
+cargo test --all-features --test hybrid                    # 29 Tests
+```
+
+**Mutationsprobe (11.11.2026), 5 von 5 erkannt:**
+
+| Mutation | erkannt durch |
+|---|---|
+| `x_ct` im Kombinierer weggelassen | 3 Tests |
+| `pq_ss` und `x_ss` vertauscht | 1 Test |
+| `x_pk` im sk als Nullen abgelegt | 3 Tests |
+| Null-Prüfung in `encaps` entfernt | 1 Test |
+| `algorithm_id` ignoriert | 1 Test |
+
+**Grenzen.** Kein Timing- oder Valgrind-Audit der Hybride — `tests/ct_valgrind.rs`
+ist unverändert und deckt sie nicht ab. Die Constant-Time-Aussage gilt nur so
+weit, wie sie in `x25519-dalek` und `ml-kem` gilt; für den eigenen Kombinierer
+ist sie nicht belegt. Für ML-KEM-768 gibt es keinen gegen eine zweite
+Implementierung geprüften KAT (kein `kyber-py` mit deterministischer
+Schnittstelle verfügbar) — `hyb15` prüft Größen und die Rundreise innerhalb
+derselben Crate.
+
 ## Grenzen
 
 * Valgrind prüft **Datenabhängigkeit**, nicht Zeit: ein Leck durch Cache-Verhalten oder
