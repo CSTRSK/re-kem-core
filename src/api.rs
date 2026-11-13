@@ -297,7 +297,7 @@ impl Kem for HybridReKemX25519Adapter {
     }
 
     fn keygen(&self) -> Result<KeyPair, KemError> {
-        use crate::hybrid::{HybridReKem512X25519, HYB_REKEM_PK_LEN, HYB_REKEM_SK_LEN};
+        use crate::hybrid::HybridReKem512X25519;
         #[cfg(feature = "rng")]
         {
             let (pk, sk) = HybridReKem512X25519.keygen();
@@ -308,8 +308,7 @@ impl Kem for HybridReKemX25519Adapter {
         }
         #[cfg(not(feature = "rng"))]
         {
-            let _ = HYB_REKEM_PK_LEN;
-            let _ = HYB_REKEM_SK_LEN;
+            let _ = HybridReKem512X25519;
             Err(KemError::NotEnabled(Algorithm::HybridReKem512X25519))
         }
     }
