@@ -71,15 +71,19 @@ impl Algorithm {
     ///
     /// `ReKem1024` is offered because its failure probability for this
     /// crate's encoding has been derived (`docs/error-probability.md`) and it
-    /// cross-validates byte-for-byte at that dimension. `MlKem*` and the
-    /// hybrid ids remain reserved until implemented.
+    /// cross-validates byte-for-byte at that dimension. `MlKem*` and `X25519`
+    /// remain reserved. The hybrids are offered only when their Cargo feature
+    /// is enabled, because that is when an implementation exists.
     pub const fn is_offered(self) -> bool {
-        matches!(
-            self,
-            Algorithm::ReKem512
-                | Algorithm::ReKem1024
-                | Algorithm::HybridReKem512X25519
-        )
+        match self {
+            Algorithm::ReKem512 | Algorithm::ReKem1024 => true,
+            // Die Hybride gelten nur dann als angeboten, wenn das jeweilige
+            // Feature aktiv ist. Ohne Feature gibt es keinen Adapter, und ein
+            // "angeboten" ohne Implementierung waere irrefuehrend.
+            Algorithm::HybridReKem512X25519 => cfg!(feature = "hybrid-rekem-x25519"),
+            Algorithm::HybridMlKem768X25519 => cfg!(feature = "hybrid-mlkem-x25519"),
+            _ => false,
+        }
     }
 
     /// Decode an identifier byte.

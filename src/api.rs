@@ -46,6 +46,10 @@ pub enum KemError {
     Randomness,
     /// The algorithm exists but is not implemented here at all.
     UnknownAlgorithm(Algorithm),
+    /// The public key is structurally valid but cryptographically unusable —
+    /// for example an X25519 point of small order, whose shared secret would
+    /// be all zeros.
+    InvalidPublicKey,
 }
 
 impl core::fmt::Display for KemError {
@@ -59,6 +63,9 @@ impl core::fmt::Display for KemError {
             }
             KemError::Randomness => write!(f, "randomness source failed"),
             KemError::UnknownAlgorithm(a) => write!(f, "{} is not implemented", a.label()),
+            KemError::InvalidPublicKey => {
+                write!(f, "public key is structurally valid but cryptographically unusable")
+            }
         }
     }
 }
@@ -265,6 +272,201 @@ impl<const N: usize, const PK: usize, const SK: usize, const CT: usize> Kem
 /// This is the piece that turns "we should support ML-KEM one day" into a
 /// configuration change: a caller asks the registry for an algorithm by id
 /// and gets whatever implementation is wired in, without knowing which.
+
+// ── Hybride Adapter (experimentell) ────────────────────────────────────────
+
+/// Adapter für [`crate::hybrid::HybridReKem512X25519`].
+#[cfg(feature = "hybrid-rekem-x25519")]
+#[derive(Debug, Default, Clone, Copy)]
+pub struct HybridReKemX25519Adapter;
+
+#[cfg(feature = "hybrid-rekem-x25519")]
+impl Kem for HybridReKemX25519Adapter {
+    fn algorithm(&self) -> Algorithm {
+        Algorithm::HybridReKem512X25519
+    }
+
+    fn sizes(&self) -> Sizes {
+        use crate::hybrid::{HYB_REKEM_CT_LEN, HYB_REKEM_PK_LEN, HYB_REKEM_SK_LEN, HYBRID_SS_LEN};
+        Sizes {
+            public_key: HYB_REKEM_PK_LEN,
+            secret_key: HYB_REKEM_SK_LEN,
+            ciphertext: HYB_REKEM_CT_LEN,
+            shared_secret: HYBRID_SS_LEN,
+        }
+    }
+
+    fn keygen(&self) -> Result<KeyPair, KemError> {
+        use crate::hybrid::{HybridReKem512X25519, HYB_REKEM_PK_LEN, HYB_REKEM_SK_LEN};
+        #[cfg(feature = "rng")]
+        {
+            let (pk, sk) = HybridReKem512X25519.keygen();
+            Ok(KeyPair {
+                public_key: pk.to_vec(),
+                secret_key: sk.to_vec(),
+            })
+        }
+        #[cfg(not(feature = "rng"))]
+        {
+            let _ = HYB_REKEM_PK_LEN;
+            let _ = HYB_REKEM_SK_LEN;
+            Err(KemError::NotEnabled(Algorithm::HybridReKem512X25519))
+        }
+    }
+
+    fn encaps(&self, public_key: &[u8]) -> Result<(Vec<u8>, Vec<u8>), KemError> {
+        use crate::hybrid::{HybridReKem512X25519, HYB_REKEM_PK_LEN};
+        if public_key.len() != HYB_REKEM_PK_LEN {
+            return Err(KemError::BadLength {
+                what: "public key",
+                expected: HYB_REKEM_PK_LEN,
+                got: public_key.len(),
+            });
+        }
+        let mut pk = [0u8; HYB_REKEM_PK_LEN];
+        pk.copy_from_slice(public_key);
+        #[cfg(feature = "rng")]
+        {
+            let mut m = [0u8; 32];
+            let mut e = [0u8; 32];
+            getrandom::getrandom(&mut m).map_err(|_| KemError::Randomness)?;
+            getrandom::getrandom(&mut e).map_err(|_| KemError::Randomness)?;
+            match HybridReKem512X25519.encaps_derand(&pk, &m, &e) {
+                Some((ct, ss)) => Ok((ct.to_vec(), ss.to_vec())),
+                None => Err(KemError::InvalidPublicKey),
+            }
+        }
+        #[cfg(not(feature = "rng"))]
+        {
+            let _ = pk;
+            Err(KemError::NotEnabled(Algorithm::HybridReKem512X25519))
+        }
+    }
+
+    fn decaps(&self, secret_key: &[u8], ciphertext: &[u8]) -> Result<Vec<u8>, KemError> {
+        use crate::hybrid::{
+            HybridReKem512X25519, HYB_REKEM_CT_LEN, HYB_REKEM_SK_LEN,
+        };
+        if secret_key.len() != HYB_REKEM_SK_LEN {
+            return Err(KemError::BadLength {
+                what: "secret key",
+                expected: HYB_REKEM_SK_LEN,
+                got: secret_key.len(),
+            });
+        }
+        if ciphertext.len() != HYB_REKEM_CT_LEN {
+            return Err(KemError::BadLength {
+                what: "ciphertext",
+                expected: HYB_REKEM_CT_LEN,
+                got: ciphertext.len(),
+            });
+        }
+        let mut sk = [0u8; HYB_REKEM_SK_LEN];
+        sk.copy_from_slice(secret_key);
+        let mut ct = [0u8; HYB_REKEM_CT_LEN];
+        ct.copy_from_slice(ciphertext);
+        Ok(HybridReKem512X25519.decaps(&sk, &ct).to_vec())
+    }
+
+    fn name(&self) -> &'static str {
+        Algorithm::HybridReKem512X25519.label()
+    }
+}
+
+/// Adapter für [`crate::hybrid::HybridMlKem768X25519`].
+#[cfg(feature = "hybrid-mlkem-x25519")]
+#[derive(Debug, Default, Clone, Copy)]
+pub struct HybridMlKemX25519Adapter;
+
+#[cfg(feature = "hybrid-mlkem-x25519")]
+impl Kem for HybridMlKemX25519Adapter {
+    fn algorithm(&self) -> Algorithm {
+        Algorithm::HybridMlKem768X25519
+    }
+
+    fn sizes(&self) -> Sizes {
+        use crate::hybrid::{HYB_MLKEM_CT_LEN, HYB_MLKEM_PK_LEN, HYB_MLKEM_SK_LEN, HYBRID_SS_LEN};
+        Sizes {
+            public_key: HYB_MLKEM_PK_LEN,
+            secret_key: HYB_MLKEM_SK_LEN,
+            ciphertext: HYB_MLKEM_CT_LEN,
+            shared_secret: HYBRID_SS_LEN,
+        }
+    }
+
+    fn keygen(&self) -> Result<KeyPair, KemError> {
+        use crate::hybrid::HybridMlKem768X25519;
+        #[cfg(feature = "rng")]
+        {
+            let (pk, sk) = HybridMlKem768X25519.keygen();
+            Ok(KeyPair {
+                public_key: pk.to_vec(),
+                secret_key: sk.to_vec(),
+            })
+        }
+        #[cfg(not(feature = "rng"))]
+        {
+            Err(KemError::NotEnabled(Algorithm::HybridMlKem768X25519))
+        }
+    }
+
+    fn encaps(&self, public_key: &[u8]) -> Result<(Vec<u8>, Vec<u8>), KemError> {
+        use crate::hybrid::{HybridMlKem768X25519, HYB_MLKEM_PK_LEN};
+        if public_key.len() != HYB_MLKEM_PK_LEN {
+            return Err(KemError::BadLength {
+                what: "public key",
+                expected: HYB_MLKEM_PK_LEN,
+                got: public_key.len(),
+            });
+        }
+        let mut pk = [0u8; HYB_MLKEM_PK_LEN];
+        pk.copy_from_slice(public_key);
+        #[cfg(feature = "rng")]
+        {
+            let mut m = [0u8; 32];
+            let mut e = [0u8; 32];
+            getrandom::getrandom(&mut m).map_err(|_| KemError::Randomness)?;
+            getrandom::getrandom(&mut e).map_err(|_| KemError::Randomness)?;
+            match HybridMlKem768X25519.encaps_derand(&pk, &m, &e) {
+                Some((ct, ss)) => Ok((ct.to_vec(), ss.to_vec())),
+                None => Err(KemError::InvalidPublicKey),
+            }
+        }
+        #[cfg(not(feature = "rng"))]
+        {
+            let _ = pk;
+            Err(KemError::NotEnabled(Algorithm::HybridMlKem768X25519))
+        }
+    }
+
+    fn decaps(&self, secret_key: &[u8], ciphertext: &[u8]) -> Result<Vec<u8>, KemError> {
+        use crate::hybrid::{HybridMlKem768X25519, HYB_MLKEM_CT_LEN, HYB_MLKEM_SK_LEN};
+        if secret_key.len() != HYB_MLKEM_SK_LEN {
+            return Err(KemError::BadLength {
+                what: "secret key",
+                expected: HYB_MLKEM_SK_LEN,
+                got: secret_key.len(),
+            });
+        }
+        if ciphertext.len() != HYB_MLKEM_CT_LEN {
+            return Err(KemError::BadLength {
+                what: "ciphertext",
+                expected: HYB_MLKEM_CT_LEN,
+                got: ciphertext.len(),
+            });
+        }
+        let mut sk = [0u8; HYB_MLKEM_SK_LEN];
+        sk.copy_from_slice(secret_key);
+        let mut ct = [0u8; HYB_MLKEM_CT_LEN];
+        ct.copy_from_slice(ciphertext);
+        Ok(HybridMlKem768X25519.decaps(&sk, &ct).to_vec())
+    }
+
+    fn name(&self) -> &'static str {
+        Algorithm::HybridMlKem768X25519.label()
+    }
+}
+
 pub struct Registry {
     entries: Vec<(Algorithm, Box<dyn Kem>)>,
 }
@@ -285,6 +487,10 @@ impl Registry {
         let mut r = Registry::new();
         r.register(Box::new(ReKemKem::new()));
         r.register(Box::new(ReKem1024Kem::new()));
+        #[cfg(feature = "hybrid-rekem-x25519")]
+        r.register(Box::new(HybridReKemX25519Adapter));
+        #[cfg(feature = "hybrid-mlkem-x25519")]
+        r.register(Box::new(HybridMlKemX25519Adapter));
         r
     }
 
