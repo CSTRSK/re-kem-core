@@ -63,6 +63,39 @@ Every operation needed for a complete, standards-shaped KEM is present:
 - **Serialisation** — 2 bytes per coefficient, little-endian
 - **FO transform** — SHA3-256 / SHA3-512 / SHAKE-256, implicit rejection
 
+## Hybride (experimentell)
+
+Zwei Hybride aus PQ-KEM und X25519, **standardmäßig aus** und **ohne
+Standardisierungsstatus**. Der Quantenschutz hängt allein am PQ-Teil; X25519
+liefert nur klassische Absicherung zusätzlich. **Kein externes Audit**, **nicht
+X-Wing-kompatibel**.
+
+```toml
+re-kem-core = { version = "0.2", features = ["hybrid-rekem-x25519"] }
+```
+
+| | `HybridReKem512X25519` (0x81) | `HybridMlKem768X25519` (0x90) |
+|---|---|---|
+| pk | `rekem_pk (1056) ‖ x_pk (32)` = **1088** | `mlkem768_ek (1184) ‖ x_pk (32)` = **1216** |
+| sk | `rekem_sk (2144) ‖ x_sk (32) ‖ x_pk (32)` = **2208** | `mlkem768_dk (2400) ‖ x_sk (32) ‖ x_pk (32)` = **2464** |
+| ct | `rekem_ct (2048) ‖ x_ct (32)` = **2080** | `mlkem768_ct (1088) ‖ x_ct (32)` = **1120** |
+| ss | 32 | 32 |
+
+Kombinierer, verbindlich:
+
+```text
+ss = SHA3-256("re-kem-core/hybrid/v1" ‖ id ‖ pq_ss ‖ x_ss ‖ pq_ct ‖ x_ct ‖ x_pk)
+```
+
+Die Bindung an beide Chiffretexte und den Empfänger-Schlüssel schützt vor
+Mix-and-Match. Details, Begründung und Grenzen: [`docs/hybrid.md`](docs/hybrid.md).
+
+```
+cargo test --features hybrid-rekem-x25519
+cargo test --features hybrid-mlkem-x25519
+cargo test --all-features
+```
+
 ## 🐛 The R-constant bug this crate caught
 
 A reviewed draft stated `R = 2^16 ≡ 4095 (mod q)`. The correct value is **4091**:
