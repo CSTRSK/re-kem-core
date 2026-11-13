@@ -75,36 +75,24 @@ fn hyb04_kombinierer_gegen_python_referenz() {
 
     for (i, (id, erwartet)) in KAT.iter().enumerate() {
         // Gleiche Formel wie tools/hybrid_referenz.py
-        let pq_ss: [u8; 32] = {
-            let mut a = [0u8; 32];
-            for j in 0..32 {
-                a[j] = ((i * 7 + j) % 256) as u8;
-            }
-            a
-        };
-        let x_ss: [u8; 32] = {
-            let mut a = [0u8; 32];
-            for j in 0..32 {
-                a[j] = ((i * 13 + j) % 256) as u8;
-            }
-            a
-        };
+        let mut pq_ss = [0u8; 32];
+        for (j, byte) in pq_ss.iter_mut().enumerate() {
+            *byte = ((i * 7 + j) % 256) as u8;
+        }
+        let mut x_ss = [0u8; 32];
+        for (j, byte) in x_ss.iter_mut().enumerate() {
+            *byte = ((i * 13 + j) % 256) as u8;
+        }
         let pq_ct_len = if *id == 0x81 { 2048 } else { 1088 };
         let pq_ct: Vec<u8> = (0..pq_ct_len).map(|j| ((i * 3 + j) % 256) as u8).collect();
-        let x_ct: [u8; 32] = {
-            let mut a = [0u8; 32];
-            for j in 0..32 {
-                a[j] = ((i * 11 + j) % 256) as u8;
-            }
-            a
-        };
-        let x_pk: [u8; 32] = {
-            let mut a = [0u8; 32];
-            for j in 0..32 {
-                a[j] = ((i * 17 + j) % 256) as u8;
-            }
-            a
-        };
+        let mut x_ct = [0u8; 32];
+        for (j, byte) in x_ct.iter_mut().enumerate() {
+            *byte = ((i * 11 + j) % 256) as u8;
+        }
+        let mut x_pk = [0u8; 32];
+        for (j, byte) in x_pk.iter_mut().enumerate() {
+            *byte = ((i * 17 + j) % 256) as u8;
+        }
 
         let ist = kombinierer_oeffentlich(*id, &pq_ss, &x_ss, &pq_ct, &x_ct, &x_pk);
         let soll = hex32(erwartet);
@@ -179,7 +167,6 @@ mod a {
     pub const CT: usize = HYB_REKEM_CT_LEN;
     pub const SS: usize = HYBRID_SS_LEN;
     pub const ID: u8 = Algorithm::HybridReKem512X25519 as u8;
-    pub const OTHER_ID: u8 = Algorithm::HybridMlKem768X25519 as u8;
 
     pub fn keygen(seed: u64) -> (Vec<u8>, Vec<u8>) {
         let sa = crate::seed_bytes(seed, 32);
@@ -219,12 +206,6 @@ mod a {
         Some(HybridReKem512X25519.decaps(&s, &c).to_vec())
     }
 
-    /// pk mit manipuliertem X25519-Anteil an einer Position im pq_pk.
-    pub fn pk_mit_erstem_byte_null(pk: &[u8]) -> Vec<u8> {
-        let mut p = pk.to_vec();
-        p[0] = 0;
-        p
-    }
 }
 
 #[cfg(feature = "hybrid-mlkem-x25519")]
@@ -237,7 +218,6 @@ mod b {
     pub const CT: usize = HYB_MLKEM_CT_LEN;
     pub const SS: usize = HYBRID_SS_LEN;
     pub const ID: u8 = Algorithm::HybridMlKem768X25519 as u8;
-    pub const OTHER_ID: u8 = Algorithm::HybridReKem512X25519 as u8;
 
     pub fn keygen(seed: u64) -> (Vec<u8>, Vec<u8>) {
         let pq = crate::seed_bytes(seed, 64);
@@ -273,11 +253,6 @@ mod b {
         Some(HybridMlKem768X25519.decaps(&s, &c).to_vec())
     }
 
-    pub fn pk_mit_erstem_byte_null(pk: &[u8]) -> Vec<u8> {
-        let mut p = pk.to_vec();
-        p[0] = 0;
-        p
-    }
 }
 
 // ══════════════ Makro: dieselben Tests für beide Algorithmen ══════════════
@@ -499,12 +474,46 @@ macro_rules! hybrid_tests {
                 let _ = h::encaps(&vec![0xFFu8; h::PK], 93);
             }
 
-            /// hyb14: keine Vermischung zwischen den Hybriden.
+            /// hyb14: keine Vermischung — ein pk des anderen Hybrids wird
+            /// abgelehnt, weil die Laengen nicht passen (1088 vs 1216).
             #[test]
             fn hyb14_keine_vermischung() {
-                // Der eigene pk passt, der des anderen Hybrids nicht.
-                let (pk, _) = h::keygen(100);
-                assert!(h::encaps(&pk, 101).is_some(), "eigener pk abgelehnt");
+                let (pk, sk) = h::keygen(100);
+                let (ct, ss) = h::encaps(&pk, 101).expect("eigener pk");
+
+                // Der eigene pk funktioniert.
+                assert_eq!(h::decaps(&sk, &ct).expect("eigener ct"), ss);
+
+                // Ein pk mit der Laenge des anderen Hybrids muss abgelehnt
+                // werden: die Laengenpruefung greift vor allem anderen.
+                let fremde_laenge = if h::ID == 0x81 {
+                    1216 // ML-KEM-768-Hybrid
+                } else {
+                    1088 // RE-KEM-512-Hybrid
+                };
+                assert_ne!(fremde_laenge, h::PK, "Laengen duerfen sich nicht gleichen");
+                let fremd_pk = vec![0xAAu8; fremde_laenge];
+                assert!(
+                    h::encaps(&fremd_pk, 102).is_none(),
+                    "pk des anderen Hybrids wurde akzeptiert"
+                );
+
+                // Dasselbe fuer sk und ct in decaps.
+                let fremd_sk_len = if h::ID == 0x81 { 2464 } else { 2208 };
+                let fremd_sk = vec![0xAAu8; fremd_sk_len];
+                assert!(
+                    h::decaps(&fremd_sk, &ct).is_none(),
+                    "sk des anderen Hybrids wurde akzeptiert"
+                );
+
+                let fremd_ct_len = if h::ID == 0x81 { 1120 } else { 2080 };
+                let fremd_ct = vec![0xAAu8; fremd_ct_len];
+                assert!(
+                    h::decaps(&sk, &fremd_ct).is_none(),
+                    "ct des anderen Hybrids wurde akzeptiert"
+                );
+
+                // Die IDs bleiben verschieden (Formalismus, aber billig).
                 assert_eq!(h::ID, $alg as u8);
                 assert_ne!(h::ID, $andere as u8);
             }
@@ -584,17 +593,20 @@ fn hyb13_registry_ohne_feature_nicht_registriert() {
 #[test]
 fn hyb15_mlkem768_groessen_gegen_das_crate() {
     use ml_kem::kem::KeyExport;
-    use ml_kem::{DecapsulationKey, ExpandedKeyEncoding, MlKem768, Seed};
+    #[allow(deprecated)]
+    use ml_kem::ExpandedKeyEncoding;
+    use ml_kem::{DecapsulationKey, MlKem768, Seed};
     use re_kem_core::hybrid::{MLKEM768_CT_LEN, MLKEM768_DK_LEN, MLKEM768_EK_LEN};
 
     let dk = DecapsulationKey::<MlKem768>::from(Seed::from([3u8; 64]));
     let ek = dk.encapsulation_key();
 
     assert_eq!(ek.to_bytes().len(), MLKEM768_EK_LEN, "ek-Groesse");
-    assert_eq!(dk.to_expanded_bytes().len(), MLKEM768_DK_LEN, "dk-Groesse");
+    #[allow(deprecated)]
+    let dk_len = dk.to_expanded_bytes().len();
+    assert_eq!(dk_len, MLKEM768_DK_LEN, "dk-Groesse");
 
     // Rundreise des PQ-Teils allein (deterministisch).
-    use ml_kem::kem::Encapsulate;
     use ml_kem::B32;
     let m = B32::from([9u8; 32]);
     let (ct, ss) = ek.encapsulate_deterministic(&m);

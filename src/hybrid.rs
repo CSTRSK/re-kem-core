@@ -240,13 +240,6 @@ impl HybridMlKem768X25519 {
         x_sk: &[u8; 32],
     ) -> ([u8; HYB_MLKEM_PK_LEN], [u8; HYB_MLKEM_SK_LEN]) {
         use ml_kem::kem::KeyExport;
-        // `ExpandedKeyEncoding` ist in ml-kem 0.3 als deprecated markiert
-        // ("use DecapsulationKey::from_seed instead"). Der Hinweis passt hier
-        // nicht: Die Spezifikation dieses Hybrids verlangt die 2400-Byte-
-        // Dekodierung im geheimen Schluessel, `from_seed` kennt aber nur den
-        // 64-Byte-Seed. Das expanded Format ist damit die einzige Moeglichkeit,
-        // das vorgegebene Layout einzuhalten.
-        #[allow(deprecated)]
         use ml_kem::ExpandedKeyEncoding;
         use ml_kem::{DecapsulationKey, MlKem768, Seed};
 
@@ -256,7 +249,6 @@ impl HybridMlKem768X25519 {
         let ek_bytes = ek.to_bytes();
         // dk.to_bytes() waere nur der 64-Byte-Seed; die 2400 Byte liegen im
         // expanded Format.
-        #[allow(deprecated)]
         let dk_bytes = dk.to_expanded_bytes();
         let x_pk = x_pk_aus(x_sk);
 
@@ -289,6 +281,7 @@ impl HybridMlKem768X25519 {
         m: &[u8; 32],
         e_sk: &[u8; 32],
     ) -> Option<([u8; HYB_MLKEM_CT_LEN], [u8; HYBRID_SS_LEN])> {
+        use ml_kem::kem::{Encapsulate, KeyExport};
         use ml_kem::{B32, EncapsulationKey, Key, MlKem768};
 
         let (ek_bytes, x_pk) = pk.split_at(MLKEM768_EK_LEN);
@@ -323,9 +316,6 @@ impl HybridMlKem768X25519 {
         ct: &[u8; HYB_MLKEM_CT_LEN],
     ) -> [u8; HYBRID_SS_LEN] {
         use ml_kem::kem::Decapsulate;
-        // Siehe keygen_derand: expanded Format ist durch das vorgegebene
-        // sk-Layout bedingt, nicht durch Bequemlichkeit.
-        #[allow(deprecated)]
         use ml_kem::ExpandedKeyEncoding;
         use ml_kem::{Ciphertext, DecapsulationKey, MlKem768};
 
@@ -342,7 +332,6 @@ impl HybridMlKem768X25519 {
             // Aus dem expanded Format (2400 Byte) rekonstruieren; die Crate
             // prueft dabei die Konsistenz von ek und h.
             let expanded = ml_kem::ExpandedDecapsulationKey::<MlKem768>::from(dk_array);
-            #[allow(deprecated)]
             if let Ok(dk) = DecapsulationKey::<MlKem768>::from_expanded_bytes(&expanded) {
                 if let Ok(ct_array) = <&Ciphertext<MlKem768>>::try_from(pq_ct) {
                     let pq_ss = dk.decapsulate(ct_array);

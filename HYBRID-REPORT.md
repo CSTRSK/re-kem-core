@@ -18,7 +18,7 @@ in `/tmp/abnahme.log`. Auszug der Hybrid-Suite:
 | `cargo test --release --all-features --no-fail-fast` | `29 passed; 0 failed` (Hybrid-Suite) |
 | `cargo build --no-default-features` | `Finished` |
 | `cargo build --no-default-features --features hybrid-rekem-x25519` | `Finished` |
-| `cargo clippy --all-features -- -D warnings` | **nicht gelaufen** — `cargo-clippy` ist für die Toolchain nicht installiert |
+| `cargo clippy --all-features` | gelaufen (clippy 0.1.98 nachinstalliert). **Eigener Code: 0 Meldungen** in `src/hybrid.rs` und `tests/hybrid.rs`. 14 Meldungen im Bestandscode (ntt.rs 5, field.rs 3, sampling.rs 2, lib.rs 1, api.rs 1, params.rs 1) — die sind älter als diese Arbeit und bleiben laut Anleitung unberührt. `-D warnings` scheitert daher am Bestand, nicht an den Hybriden. |
 
 Basislinie vor der Arbeit: 87 Tests grün (31 lib + 3 ct_control + 6 ct_valgrind
 + 5 decode_untrusted + 26 eigenschaften + 3 fia + 7 ind_cca2 + 5 kat + 1 doc).
@@ -30,7 +30,7 @@ Nach der Arbeit unverändert.
 |---|---|---|
 | 1 | `x_ct` im Kombinierer weggelassen | 3 Tests |
 | 2 | `pq_ss` und `x_ss` vertauscht | 1 Test |
-| 3 | `x_pk` im sk als Nullen abgelegt | 3 Tests |
+| 3 | `x_pk` im sk als Nullen abgelegt | 4 Tests |
 | 4 | Null-Prüfung in `encaps` entfernt | 1 Test |
 | 5 | `algorithm_id` im Kombinierer ignoriert | 1 Test |
 
@@ -78,12 +78,37 @@ Prüflogik ist identisch, nur die Zahl der Instanzen unterscheidet sich.
 `https://www.rfc-editor.org/rfc/rfc7748.txt` kopiert (Abschnitt 5.2 und 6.1), nicht
 aus dem Gedächtnis.
 
+## Nachträglich behoben (11.11.2026)
+
+Drei Lücken aus der ersten Fassung:
+
+**1. `cargo clippy` fehlte.** Nachinstalliert (`rustup component add clippy`,
+0.1.98) und gelaufen. Eigener Code warnungsfrei; 14 Meldungen im Bestandscode,
+der unberührt bleibt.
+
+**2. `hyb14_keine_vermischung` war ein Platzhalter.** Der Test im Makro prüfte
+nur, dass der eigene pk funktioniert und die IDs verschieden sind — nicht, dass
+ein pk des *anderen* Hybrids abgelehnt wird. Bei einem einzelnen Feature gab es
+keinen zweiten Adapter zur Hand, was die Schwäche erklärt, aber nicht
+rechtfertigt. Jetzt prüft der Test die Ablehnung über die Laengendifferenz
+(1088 vs 1216, 2208 vs 2464, 2080 vs 1120) — das funktioniert auch mit nur einem
+aktiven Feature. Die Mutationsprobe schlägt bei Mutation 3 jetzt vier statt drei
+Tests an.
+
+**3. Compiler-Warnungen im eigenen Code.** Ungenutzte Imports entfernt. Die
+`deprecated`-Hinweise auf `ExpandedKeyEncoding` bleiben strukturell: Das
+vorgegebene sk-Layout verlangt die 2400-Byte-Dekodierung, `from_seed` kennt nur
+64 Byte. Mit `#[allow(deprecated)]` lokal freigezeichnet und an Ort und Stelle
+begründet.
+
 ## Nicht geprüft
 
-- **Kein Timing- oder Valgrind-Audit der Hybride.** `tests/ct_valgrind.rs` ist
-  unverändert und deckt sie nicht ab. Die Constant-Time-Aussage gilt nur so weit,
-  wie sie in `x25519-dalek` und `ml-kem` gilt; für den eigenen Kombinierer ist sie
-  nicht belegt.
+- **Kein Timing- oder Valgrind-Audit der Hybride — das ist Vorgabe, kein
+  Versäumnis.** Abschnitt 7.3 der Anleitung schliesst die Erweiterung von
+  `tests/ct_valgrind.rs` ausdrücklich aus, weil die Constant-Time-Aussage nur so
+  weit gilt, wie sie in `x25519-dalek` und `ml-kem` gilt. Für den eigenen
+  Kombinierer ist sie **nicht belegt**. Ein Timing-Test wäre hier irreführend:
+  Er würde eine Eigenschaft suggerieren, die weder gemessen noch garantiert ist.
 - **Kein unabhängiger ML-KEM-768-KAT.** `pip install kyber-py` wurde nicht
   versucht; `hyb15` prüft nur Größen gegen die Crate und die Rundreise innerhalb
   derselben Implementierung. Ein Fehler, den RustCrypto und kyber-py gemeinsam
@@ -110,4 +135,5 @@ aus dem Gedächtnis.
 - [x] README, HARNESSES.md, `docs/hybrid.md` aktualisiert, ohne
       „quantensicher“-Behauptung
 - [x] Branch geliefert, `main` unberührt
+- [x] `cargo clippy --all-features`: eigener Code ohne Meldung
 - [x] Dieser Bericht
